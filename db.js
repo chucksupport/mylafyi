@@ -16,6 +16,7 @@ db.exec(`
     title TEXT NOT NULL,
     content TEXT NOT NULL,
     mood TEXT DEFAULT 'good',
+    sentiment INTEGER DEFAULT 5,
     photo TEXT,
     pinned INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -54,6 +55,13 @@ db.exec(`
     value TEXT NOT NULL
   );
 `);
+
+// Migrate: add sentiment column if missing
+try {
+  db.prepare('SELECT sentiment FROM updates LIMIT 1').get();
+} catch {
+  db.exec('ALTER TABLE updates ADD COLUMN sentiment INTEGER DEFAULT 5');
+}
 
 // Seed default milestones if empty
 const milestoneCount = db.prepare('SELECT COUNT(*) as count FROM milestones').get().count;
@@ -130,21 +138,21 @@ module.exports = {
     return db.prepare('SELECT * FROM updates WHERE pinned = 1 ORDER BY updated_at DESC LIMIT 1').get();
   },
 
-  createUpdate({ title, content, mood, photo }) {
+  createUpdate({ title, content, mood, sentiment, photo }) {
     return db.prepare(
-      'INSERT INTO updates (title, content, mood, photo) VALUES (?, ?, ?, ?)'
-    ).run(title, content, mood || 'good', photo);
+      'INSERT INTO updates (title, content, mood, sentiment, photo) VALUES (?, ?, ?, ?, ?)'
+    ).run(title, content, mood || 'good', sentiment || 5, photo);
   },
 
-  editUpdate(id, { title, content, mood, photo }) {
+  editUpdate(id, { title, content, mood, sentiment, photo }) {
     if (photo) {
       return db.prepare(
-        'UPDATE updates SET title = ?, content = ?, mood = ?, photo = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
-      ).run(title, content, mood || 'good', photo, id);
+        'UPDATE updates SET title = ?, content = ?, mood = ?, sentiment = ?, photo = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+      ).run(title, content, mood || 'good', sentiment || 5, photo, id);
     }
     return db.prepare(
-      'UPDATE updates SET title = ?, content = ?, mood = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
-    ).run(title, content, mood || 'good', id);
+      'UPDATE updates SET title = ?, content = ?, mood = ?, sentiment = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+    ).run(title, content, mood || 'good', sentiment || 5, id);
   },
 
   deleteUpdate(id) {

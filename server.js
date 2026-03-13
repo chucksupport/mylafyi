@@ -52,15 +52,22 @@ const upload = multer({
   }
 });
 
-// Auth middleware
+// Auth middleware - admin
 function requireAuth(req, res, next) {
   if (req.session && req.session.authenticated) return next();
   res.redirect('/admin/login');
 }
 
+// Auth middleware - viewer (shared password to view the site)
+function requireViewer(req, res, next) {
+  if (req.session && (req.session.viewer || req.session.authenticated)) return next();
+  res.redirect('/login');
+}
+
 // Make common data available to all views
 app.use((req, res, next) => {
   res.locals.authenticated = req.session && req.session.authenticated;
+  res.locals.viewer = req.session && (req.session.viewer || req.session.authenticated);
   res.locals.settings = db.getSettings();
   next();
 });
@@ -95,9 +102,32 @@ function getAgeInfo(settings) {
   };
 }
 
+// ============ VIEWER AUTH ============
+
+app.get('/login', (req, res) => {
+  if (req.session && (req.session.viewer || req.session.authenticated)) return res.redirect('/');
+  res.render('login', { error: null });
+});
+
+app.post('/login', (req, res) => {
+  const { password } = req.body;
+  const viewerPassword = process.env.VIEWER_PASSWORD || 'myla2026';
+  const adminPassword = process.env.ADMIN_PASSWORD || 'myla3926';
+  if (password === adminPassword) {
+    req.session.authenticated = true;
+    req.session.viewer = true;
+    return res.redirect('/');
+  }
+  if (password === viewerPassword) {
+    req.session.viewer = true;
+    return res.redirect('/');
+  }
+  res.render('login', { error: 'Incorrect password. Please try again.' });
+});
+
 // ============ PUBLIC ROUTES ============
 
-app.get('/', (_req, res) => {
+app.get('/', requireViewer, (_req, res) => {
   const updates = db.getUpdates(10);
   const pinned = db.getPinnedUpdate();
   const latestVitals = db.getLatestVitals();
@@ -108,20 +138,20 @@ app.get('/', (_req, res) => {
   res.render('index', { updates, pinned, latestVitals, vitals, milestones, ageInfo });
 });
 
-app.get('/update/:id', (req, res) => {
+app.get('/update/:id', requireViewer, (req, res) => {
   const update = db.getUpdate(req.params.id);
   if (!update) return res.status(404).render('404');
   res.render('update', { update });
 });
 
-app.get('/milestones', (_req, res) => {
+app.get('/milestones', requireViewer, (_req, res) => {
   const milestones = db.getMilestonesByCategory();
   const settings = db.getSettings();
   const ageInfo = getAgeInfo(settings);
   res.render('milestones', { milestones, ageInfo });
 });
 
-app.get('/vitals', (_req, res) => {
+app.get('/vitals', requireViewer, (_req, res) => {
   const vitals = db.getVitals(90);
   const settings = db.getSettings();
   const ageInfo = getAgeInfo(settings);
@@ -129,7 +159,7 @@ app.get('/vitals', (_req, res) => {
 });
 
 // JSON endpoint for chart data
-app.get('/api/vitals', (_req, res) => {
+app.get('/api/vitals', requireViewer, (_req, res) => {
   const vitals = db.getVitals(90);
   res.json(vitals.reverse());
 });
@@ -169,9 +199,9 @@ app.get('/admin/new', requireAuth, (_req, res) => {
 });
 
 app.post('/admin/new', requireAuth, upload.single('photo'), (req, res) => {
-  const { title, content, mood } = req.body;
+  const { title, content, mood, sentiment } = req.body;
   const photo = req.file ? '/uploads/' + req.file.filename : null;
-  db.createUpdate({ title, content, mood, photo });
+  db.createUpdate({ title, content, mood, sentiment: parseInt(sentiment) || 5, photo });
   res.redirect('/admin');
 });
 
@@ -182,9 +212,9 @@ app.get('/admin/edit/:id', requireAuth, (req, res) => {
 });
 
 app.post('/admin/edit/:id', requireAuth, upload.single('photo'), (req, res) => {
-  const { title, content, mood } = req.body;
+  const { title, content, mood, sentiment } = req.body;
   const photo = req.file ? '/uploads/' + req.file.filename : null;
-  db.editUpdate(req.params.id, { title, content, mood, photo });
+  db.editUpdate(req.params.id, { title, content, mood, sentiment: parseInt(sentiment) || 5, photo });
   res.redirect('/admin');
 });
 

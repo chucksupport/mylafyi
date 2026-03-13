@@ -21,6 +21,15 @@
     </div>
 
     <div class="form-group">
+      <label for="sentiment">How's she doing? <span id="sentiment-label" style="font-weight:400; color: var(--gray-400);"></span></label>
+      <input type="range" id="sentiment" name="sentiment" min="1" max="10" value="<%= update ? update.sentiment || 5 : 5 %>" style="width:100%; accent-color: var(--rose-500);">
+      <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--gray-400); margin-top:0.25rem;">
+        <span>Rough day</span>
+        <span>Amazing day</span>
+      </div>
+    </div>
+
+    <div class="form-group">
       <label for="content">What happened today?</label>
       <textarea id="content" name="content" rows="10" required placeholder="Tell everyone how Myla is doing today..."><%= update ? update.content : '' %></textarea>
     </div>
@@ -40,4 +49,14 @@
   </form>
 </section>
 
+<script>
+(function() {
+  const slider = document.getElementById('sentiment');
+  const label = document.getElementById('sentiment-label');
+  const labels = ['','Very rough','Rough','Hard','Below average','Okay','Decent','Good','Great','Wonderful','Amazing'];
+  function update() { label.textContent = '(' + labels[parseInt(slider.value)] + ')'; }
+  slider.addEventListener('input', update);
+  update();
+})();
+</script>
 <%- include('../partials/footer') %>

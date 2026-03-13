@@ -121,6 +121,22 @@
 </section>
 <% } %>
 
+<% if (updates.length > 0) { %>
+<section class="section ekg-section">
+  <div class="section-header">
+    <h2>Journey</h2>
+  </div>
+  <div class="ekg-container">
+    <svg class="ekg-svg" id="ekgChart"></svg>
+  </div>
+  <div class="ekg-tooltip" id="ekgTooltip">
+    <div class="ekg-tooltip-title" id="ekgTooltipTitle"></div>
+    <div class="ekg-tooltip-date" id="ekgTooltipDate"></div>
+    <div class="ekg-tooltip-excerpt" id="ekgTooltipExcerpt"></div>
+  </div>
+</section>
+<% } %>
+
 <% if (pinned) { %>
 <section class="section">
   <div class="pinned-badge">Pinned Update</div>
@@ -181,11 +197,11 @@
         datasets: [{
           label: 'Weight (g)',
           data: weightData.map(d => d.y),
-          borderColor: '#c2185b',
-          backgroundColor: 'rgba(194, 24, 91, 0.1)',
+          borderColor: '#e44b6a',
+          backgroundColor: 'rgba(228, 75, 106, 0.1)',
           fill: true,
           tension: 0.3,
-          pointBackgroundColor: '#c2185b',
+          pointBackgroundColor: '#e44b6a',
           pointRadius: 4,
           pointHoverRadius: 6,
         }]
@@ -194,15 +210,190 @@
         responsive: true,
         plugins: {
           legend: { display: false },
-          title: { display: true, text: 'Weight Over Time', font: { size: 14, family: 'Inter' } }
+          title: { display: true, text: 'Weight Over Time', font: { size: 14, family: 'Inter' }, color: '#9ca3af' }
         },
         scales: {
-          y: { title: { display: true, text: 'Grams' }, beginAtZero: false },
-          x: { title: { display: true, text: 'Date' } }
+          y: { title: { display: true, text: 'Grams', color: '#6b7280' }, beginAtZero: false, ticks: { color: '#6b7280' }, grid: { color: 'rgba(45,50,60,0.5)' } },
+          x: { title: { display: true, text: 'Date', color: '#6b7280' }, ticks: { color: '#6b7280' }, grid: { color: 'rgba(45,50,60,0.5)' } }
         }
       }
     });
   }
+</script>
+<% } %>
+
+<% if (updates.length > 0) { %>
+<script>
+(function() {
+  const allUpdates = <%- JSON.stringify(updates.map(u => ({ id: u.id, title: u.title, sentiment: u.sentiment || 5, content: u.content.substring(0, 120), created_at: u.created_at, mood: u.mood }))) %>;
+
+  // Sort chronologically
+  const sorted = allUpdates.slice().sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+  if (sorted.length === 0) return;
+
+  const svg = document.getElementById('ekgChart');
+  const tooltip = document.getElementById('ekgTooltip');
+  const tooltipTitle = document.getElementById('ekgTooltipTitle');
+  const tooltipDate = document.getElementById('ekgTooltipDate');
+  const tooltipExcerpt = document.getElementById('ekgTooltipExcerpt');
+
+  const pad = { top: 20, right: 30, bottom: 30, left: 35 };
+  const rect = svg.getBoundingClientRect();
+  const W = Math.max(rect.width, 400);
+  const H = 180;
+
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+  const chartW = W - pad.left - pad.right;
+  const chartH = H - pad.top - pad.bottom;
+
+  // Grid lines
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.top + (chartH / 4) * i;
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', pad.left);
+    line.setAttribute('x2', W - pad.right);
+    line.setAttribute('y1', y);
+    line.setAttribute('y2', y);
+    line.setAttribute('class', 'ekg-grid-line');
+    svg.appendChild(line);
+  }
+
+  // Y-axis labels
+  const yLabels = ['10', '7', '5', '3', '1'];
+  yLabels.forEach((label, i) => {
+    const y = pad.top + (chartH / 4) * i;
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    text.setAttribute('x', pad.left - 8);
+    text.setAttribute('y', y + 3);
+    text.setAttribute('text-anchor', 'end');
+    text.setAttribute('class', 'ekg-label');
+    text.textContent = label;
+    svg.appendChild(text);
+  });
+
+  // Compute points
+  const points = sorted.map((u, i) => {
+    const x = sorted.length === 1 ? chartW / 2 : (i / (sorted.length - 1)) * chartW;
+    const sentiment = Math.max(1, Math.min(10, u.sentiment || 5));
+    const y = chartH - ((sentiment - 1) / 9) * chartH;
+    return { x: pad.left + x, y: pad.top + y, update: u };
+  });
+
+  // Build EKG-style path with sharp peaks
+  function buildEkgPath(pts) {
+    if (pts.length === 1) return 'M ' + pts[0].x + ' ' + pts[0].y;
+
+    let d = 'M ' + pts[0].x + ' ' + pts[0].y;
+    for (let i = 1; i < pts.length; i++) {
+      const prev = pts[i - 1];
+      const curr = pts[i];
+      const midX = (prev.x + curr.x) / 2;
+
+      // Flat segment, then sharp spike to the value - like an EKG
+      const flatY = (prev.y + curr.y) / 2;
+      const spikeX1 = midX - (curr.x - prev.x) * 0.08;
+      const spikeX2 = midX + (curr.x - prev.x) * 0.08;
+
+      d += ' L ' + spikeX1 + ' ' + prev.y;
+      d += ' L ' + midX + ' ' + curr.y;
+      d += ' L ' + spikeX2 + ' ' + curr.y;
+      d += ' L ' + curr.x + ' ' + curr.y;
+    }
+    return d;
+  }
+
+  const pathD = buildEkgPath(points);
+
+  // Glow line
+  const glow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  glow.setAttribute('d', pathD);
+  glow.setAttribute('class', 'ekg-glow');
+  svg.appendChild(glow);
+
+  // Filled area under the line
+  const areaD = pathD + ' L ' + points[points.length - 1].x + ' ' + (H - pad.bottom) + ' L ' + points[0].x + ' ' + (H - pad.bottom) + ' Z';
+  const area = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  area.setAttribute('d', areaD);
+  area.setAttribute('class', 'ekg-area');
+  area.setAttribute('fill', 'url(#ekgGradient)');
+  svg.appendChild(area);
+
+  // Gradient definition
+  const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+  const grad = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+  grad.setAttribute('id', 'ekgGradient');
+  grad.setAttribute('x1', '0');
+  grad.setAttribute('y1', '0');
+  grad.setAttribute('x2', '0');
+  grad.setAttribute('y2', '1');
+  const stop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+  stop1.setAttribute('offset', '0%');
+  stop1.setAttribute('stop-color', '#e44b6a');
+  const stop2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+  stop2.setAttribute('offset', '100%');
+  stop2.setAttribute('stop-color', '#e44b6a');
+  stop2.setAttribute('stop-opacity', '0');
+  grad.appendChild(stop1);
+  grad.appendChild(stop2);
+  defs.appendChild(grad);
+  svg.insertBefore(defs, svg.firstChild);
+
+  // Main line
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  line.setAttribute('d', pathD);
+  line.setAttribute('class', 'ekg-line');
+  svg.appendChild(line);
+
+  // Date labels along x axis
+  const dateStep = Math.max(1, Math.floor(sorted.length / 5));
+  points.forEach((p, i) => {
+    if (i % dateStep === 0 || i === points.length - 1) {
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', p.x);
+      text.setAttribute('y', H - 6);
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('class', 'ekg-label');
+      text.textContent = new Date(p.update.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      svg.appendChild(text);
+    }
+  });
+
+  // Interactive points
+  points.forEach(p => {
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', p.x);
+    circle.setAttribute('cy', p.y);
+    circle.setAttribute('r', 5);
+    circle.setAttribute('fill', '#e44b6a');
+    circle.setAttribute('stroke', '#0f1117');
+    circle.setAttribute('stroke-width', '2');
+    circle.setAttribute('class', 'ekg-point');
+
+    circle.addEventListener('mouseenter', function(e) {
+      tooltipTitle.textContent = p.update.title;
+      tooltipDate.textContent = new Date(p.update.created_at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      tooltipExcerpt.textContent = p.update.content.replace(/\n/g, ' ') + (p.update.content.length >= 120 ? '...' : '');
+      tooltip.classList.add('visible');
+    });
+
+    circle.addEventListener('mousemove', function(e) {
+      tooltip.style.left = (e.clientX + 12) + 'px';
+      tooltip.style.top = (e.clientY - 10) + 'px';
+    });
+
+    circle.addEventListener('mouseleave', function() {
+      tooltip.classList.remove('visible');
+    });
+
+    circle.addEventListener('click', function() {
+      window.location.href = '/update/' + p.update.id;
+    });
+
+    svg.appendChild(circle);
+  });
+})();
 </script>
 <% } %>
 
