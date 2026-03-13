@@ -1,0 +1,43 @@
+<%- include('../partials/head', { pageTitle: update ? 'Edit Update' : 'New Update' }) %>
+
+<section class="admin-editor">
+  <a href="/admin" class="back-link">Back to dashboard</a>
+
+  <h1><%= update ? 'Edit Update' : 'New Update' %></h1>
+
+  <form method="POST" action="<%= update ? '/admin/edit/' + update.id : '/admin/new' %>" enctype="multipart/form-data" class="editor-form">
+    <div class="form-group">
+      <label for="title">Title</label>
+      <input type="text" id="title" name="title" value="<%= update ? update.title : '' %>" required placeholder="e.g. Day 12 - Getting Stronger">
+    </div>
+
+    <div class="form-group">
+      <label for="mood">How's it going?</label>
+      <select id="mood" name="mood">
+        <option value="great" <%= update && update.mood === 'great' ? 'selected' : '' %>>Great day</option>
+        <option value="good" <%= !update || update.mood === 'good' ? 'selected' : '' %>>Good day</option>
+        <option value="tough" <%= update && update.mood === 'tough' ? 'selected' : '' %>>Tough day</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="content">What happened today?</label>
+      <textarea id="content" name="content" rows="10" required placeholder="Tell everyone how Myla is doing today..."><%= update ? update.content : '' %></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="photo">Photo (optional)</label>
+      <input type="file" id="photo" name="photo" accept="image/*">
+      <% if (update && update.photo) { %>
+        <div class="current-photo">
+          <p>Current photo:</p>
+          <img src="<%= update.photo %>" alt="Current photo" style="max-width: 200px; border-radius: 8px;">
+        </div>
+      <% } %>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-full"><%= update ? 'Save Changes' : 'Post Update' %></button>
+  </form>
+</section>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,26 @@
+<%- include('partials/head', { pageTitle: update.title }) %>
+
+<section class="single-update">
+  <a href="/" class="back-link">&larr; Back to all updates</a>
+
+  <article>
+    <div class="update-meta">
+      <span class="mood mood-<%= update.mood %>"><%= update.mood === 'great' ? 'Great day' : update.mood === 'good' ? 'Good day' : 'Tough day' %></span>
+      <time><%= new Date(update.created_at).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %></time>
+    </div>
+
+    <h1><%= update.title %></h1>
+
+    <% if (update.photo) { %>
+    <div class="update-photo full">
+      <img src="<%= update.photo %>" alt="<%= update.title %>">
+    </div>
+    <% } %>
+
+    <div class="update-content">
+      <%- update.content.replace(/\n/g, '<br>') %>
+    </div>
+  </article>
+</section>
+
+<%- include('partials/footer') %>

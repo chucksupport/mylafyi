@@ -1,0 +1,32 @@
+<%- include('partials/head', { pageTitle: 'Milestones' }) %>
+
+<section class="page-header">
+  <h1>Milestones</h1>
+  <p class="subtitle"><%= settings.baby_name || 'Myla' %>'s journey, one step at a time</p>
+</section>
+
+<% const categoryLabels = { breathing: 'Breathing', feeding: 'Feeding', growth: 'Growth', thermoregulation: 'Thermoregulation', firsts: 'Firsts' }; %>
+
+<div class="milestones-page">
+  <% Object.keys(milestones).forEach(cat => { %>
+  <section class="milestone-category">
+    <h2 class="category-title"><%= categoryLabels[cat] || cat %></h2>
+    <div class="milestone-list">
+      <% milestones[cat].forEach(m => { %>
+      <div class="milestone-item <%= m.achieved ? 'achieved' : '' %>">
+        <div class="milestone-check"><%= m.achieved ? '&#10003;' : '' %></div>
+        <div class="milestone-info">
+          <h3><%= m.title %></h3>
+          <% if (m.description) { %><p><%= m.description %></p><% } %>
+          <% if (m.achieved && m.achieved_at) { %>
+          <time class="milestone-date"><%= new Date(m.achieved_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) %></time>
+          <% } %>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+  </section>
+  <% }) %>
+</div>
+
+<%- include('partials/footer') %>

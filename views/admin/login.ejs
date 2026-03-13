@@ -1,0 +1,22 @@
+<%- include('../partials/head', { pageTitle: 'Login' }) %>
+
+<section class="auth-page">
+  <div class="auth-card">
+    <h1>Myla.fyi Admin</h1>
+    <p>Enter the password to post updates.</p>
+
+    <% if (error) { %>
+      <div class="alert alert-error"><%= error %></div>
+    <% } %>
+
+    <form method="POST" action="/admin/login">
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required autofocus>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">Login</button>
+    </form>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

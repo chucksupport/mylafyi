@@ -1,0 +1,235 @@
+const Database = require('better-sqlite3');
+const path = require('path');
+const fs = require('fs');
+
+// Use persistent disk path on Render, fallback to local ./data for dev
+const dataDir = process.env.DATA_DIR || path.join(__dirname, 'data');
+if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+
+const db = new Database(path.join(dataDir, 'myla.db'));
+db.pragma('journal_mode = WAL');
+
+// Initialize tables
+db.exec(`
+  CREATE TABLE IF NOT EXISTS updates (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    mood TEXT DEFAULT 'good',
+    photo TEXT,
+    pinned INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS vitals (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    recorded_at DATETIME NOT NULL,
+    weight_grams REAL,
+    heart_rate INTEGER,
+    respiratory_rate INTEGER,
+    oxygen_saturation REAL,
+    temperature REAL,
+    fio2 REAL,
+    respiratory_support TEXT,
+    feeding_type TEXT,
+    feeding_volume_ml REAL,
+    notes TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS milestones (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    category TEXT NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    achieved INTEGER DEFAULT 0,
+    achieved_at DATETIME,
+    sort_order INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+  );
+`);
+
+// Seed default milestones if empty
+const milestoneCount = db.prepare('SELECT COUNT(*) as count FROM milestones').get().count;
+if (milestoneCount === 0) {
+  const defaultMilestones = [
+    // Breathing
+    ['breathing', 'Off high-frequency ventilator', 'Transitioned to conventional ventilator', 10],
+    ['breathing', 'Off conventional ventilator', 'Transitioned to CPAP', 20],
+    ['breathing', 'Off CPAP', 'Transitioned to nasal cannula', 30],
+    ['breathing', 'Breathing room air', 'No respiratory support needed', 40],
+    ['breathing', 'Apnea-free for 5+ days', 'No significant apnea or bradycardia episodes', 50],
+    // Feeding
+    ['feeding', 'First breast milk drops', 'Started trophic feeds', 10],
+    ['feeding', 'Tolerating full gavage feeds', 'Full volume through feeding tube', 20],
+    ['feeding', 'First oral feeding attempt', 'Started practicing bottle or breast', 30],
+    ['feeding', 'All feeds by mouth', 'No more feeding tube needed', 40],
+    // Growth
+    ['growth', 'Regained birth weight', 'Back to birth weight', 10],
+    ['growth', 'Reached 1,000g', 'Over 2 pounds', 20],
+    ['growth', 'Reached 1,500g', 'Over 3.3 pounds', 30],
+    ['growth', 'Reached 1,800g', 'About 4 pounds - discharge range', 40],
+    // Thermoregulation
+    ['thermoregulation', 'Moved to open crib', 'No longer needs isolette', 10],
+    ['thermoregulation', 'Maintaining own temperature', 'Stable body temp independently', 20],
+    // Big moments
+    ['firsts', 'First kangaroo care', 'First skin-to-skin hold', 10],
+    ['firsts', 'First bath', '', 20],
+    ['firsts', 'First outfit', '', 30],
+    ['firsts', 'Eyes open', '', 40],
+    ['firsts', 'Passed hearing screening', '', 50],
+    ['firsts', 'Passed car seat test', '', 60],
+    ['firsts', 'Going home', 'Discharged from NICU', 70],
+  ];
+
+  const insert = db.prepare('INSERT INTO milestones (category, title, description, sort_order) VALUES (?, ?, ?, ?)');
+  const tx = db.transaction(() => {
+    for (const m of defaultMilestones) insert.run(...m);
+  });
+  tx();
+}
+
+// Seed default settings if empty
+const settingsCount = db.prepare('SELECT COUNT(*) as count FROM settings').get().count;
+if (settingsCount === 0) {
+  const defaults = [
+    ['baby_name', 'Myla'],
+    ['birth_date', '2026-03-09'],
+    ['birth_time', '22:44'],
+    ['gestational_age_weeks', '24'],
+    ['gestational_age_days', '0'],
+    ['due_date', '2026-06-22'],
+    ['birth_weight_grams', ''],
+    ['nicu_name', 'Cleveland Clinic'],
+  ];
+  const insert = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)');
+  const tx = db.transaction(() => {
+    for (const [k, v] of defaults) insert.run(k, v);
+  });
+  tx();
+}
+
+module.exports = {
+  // Updates
+  getUpdates(limit) {
+    if (limit) return db.prepare('SELECT * FROM updates ORDER BY created_at DESC LIMIT ?').all(limit);
+    return db.prepare('SELECT * FROM updates ORDER BY created_at DESC').all();
+  },
+
+  getUpdate(id) {
+    return db.prepare('SELECT * FROM updates WHERE id = ?').get(id);
+  },
+
+  getPinnedUpdate() {
+    return db.prepare('SELECT * FROM updates WHERE pinned = 1 ORDER BY updated_at DESC LIMIT 1').get();
+  },
+
+  createUpdate({ title, content, mood, photo }) {
+    return db.prepare(
+      'INSERT INTO updates (title, content, mood, photo) VALUES (?, ?, ?, ?)'
+    ).run(title, content, mood || 'good', photo);
+  },
+
+  editUpdate(id, { title, content, mood, photo }) {
+    if (photo) {
+      return db.prepare(
+        'UPDATE updates SET title = ?, content = ?, mood = ?, photo = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+      ).run(title, content, mood || 'good', photo, id);
+    }
+    return db.prepare(
+      'UPDATE updates SET title = ?, content = ?, mood = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+    ).run(title, content, mood || 'good', id);
+  },
+
+  deleteUpdate(id) {
+    return db.prepare('DELETE FROM updates WHERE id = ?').run(id);
+  },
+
+  pinUpdate(id) {
+    db.prepare('UPDATE updates SET pinned = 0').run();
+    db.prepare('UPDATE updates SET pinned = 1 WHERE id = ?').run(id);
+  },
+
+  unpinUpdate(id) {
+    db.prepare('UPDATE updates SET pinned = 0 WHERE id = ?').run(id);
+  },
+
+  // Vitals
+  getVitals(limit = 90) {
+    return db.prepare('SELECT * FROM vitals ORDER BY recorded_at DESC LIMIT ?').all(limit);
+  },
+
+  getVitalsRange(start, end) {
+    return db.prepare('SELECT * FROM vitals WHERE recorded_at >= ? AND recorded_at <= ? ORDER BY recorded_at ASC').all(start, end);
+  },
+
+  getLatestVitals() {
+    return db.prepare('SELECT * FROM vitals ORDER BY recorded_at DESC LIMIT 1').get();
+  },
+
+  createVital(data) {
+    return db.prepare(`
+      INSERT INTO vitals (recorded_at, weight_grams, heart_rate, respiratory_rate, oxygen_saturation, temperature, fio2, respiratory_support, feeding_type, feeding_volume_ml, notes)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      data.recorded_at, data.weight_grams || null, data.heart_rate || null,
+      data.respiratory_rate || null, data.oxygen_saturation || null,
+      data.temperature || null, data.fio2 || null,
+      data.respiratory_support || null, data.feeding_type || null,
+      data.feeding_volume_ml || null, data.notes || null
+    );
+  },
+
+  deleteVital(id) {
+    return db.prepare('DELETE FROM vitals WHERE id = ?').run(id);
+  },
+
+  // Milestones
+  getMilestones() {
+    return db.prepare('SELECT * FROM milestones ORDER BY category, sort_order ASC').all();
+  },
+
+  getMilestonesByCategory() {
+    const rows = db.prepare('SELECT * FROM milestones ORDER BY category, sort_order ASC').all();
+    const grouped = {};
+    for (const row of rows) {
+      if (!grouped[row.category]) grouped[row.category] = [];
+      grouped[row.category].push(row);
+    }
+    return grouped;
+  },
+
+  achieveMilestone(id) {
+    return db.prepare('UPDATE milestones SET achieved = 1, achieved_at = CURRENT_TIMESTAMP WHERE id = ?').run(id);
+  },
+
+  unachieveMilestone(id) {
+    return db.prepare('UPDATE milestones SET achieved = 0, achieved_at = NULL WHERE id = ?').run(id);
+  },
+
+  createMilestone({ category, title, description, sort_order }) {
+    return db.prepare('INSERT INTO milestones (category, title, description, sort_order) VALUES (?, ?, ?, ?)').run(category, title, description || '', sort_order || 99);
+  },
+
+  deleteMilestone(id) {
+    return db.prepare('DELETE FROM milestones WHERE id = ?').run(id);
+  },
+
+  // Settings
+  getSettings() {
+    const rows = db.prepare('SELECT * FROM settings').all();
+    const obj = {};
+    for (const row of rows) obj[row.key] = row.value;
+    return obj;
+  },
+
+  setSetting(key, value) {
+    return db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run(key, value);
+  },
+};

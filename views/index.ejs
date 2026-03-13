@@ -1,0 +1,209 @@
+<%- include('partials/head') %>
+
+<section class="hero">
+  <div class="hero-inner">
+    <p class="hero-label">Born at <%= settings.gestational_age_weeks %>+<%= settings.gestational_age_days %> weeks</p>
+    <h1>Myla Liane Grigsby</h1>
+    <p class="subtitle">Born early, growing strong.</p>
+
+    <div class="stat-cards">
+      <div class="stat-card">
+        <span class="stat-number"><%= ageInfo.nicuDays %></span>
+        <span class="stat-label">Days Old</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number"><%= ageInfo.correctedGestWeeks %>+<%= ageInfo.correctedGestRemainder %></span>
+        <span class="stat-label">Corrected Gestational Age (wks)</span>
+      </div>
+      <% if (ageInfo.daysToDueDate > 0) { %>
+      <div class="stat-card">
+        <span class="stat-number"><%= ageInfo.daysToDueDate %></span>
+        <span class="stat-label">Days to Due Date</span>
+      </div>
+      <% } else { %>
+      <div class="stat-card">
+        <span class="stat-number"><%= ageInfo.correctedWeeks %>w<%= ageInfo.correctedRemainder %>d</span>
+        <span class="stat-label">Corrected Age</span>
+      </div>
+      <% } %>
+      <% if (latestVitals && latestVitals.weight_grams) { %>
+      <div class="stat-card">
+        <span class="stat-number"><%= latestVitals.weight_grams %><small>g</small></span>
+        <span class="stat-label">Latest Weight</span>
+      </div>
+      <% } %>
+    </div>
+  </div>
+</section>
+
+<% if (latestVitals) { %>
+<section class="section vitals-snapshot">
+  <div class="section-header">
+    <h2>Latest Vitals</h2>
+    <a href="/vitals" class="section-link">View all vitals</a>
+  </div>
+  <div class="vitals-grid">
+    <% if (latestVitals.weight_grams) { %>
+    <div class="vital-card">
+      <div class="vital-icon">W</div>
+      <div class="vital-info">
+        <span class="vital-value"><%= latestVitals.weight_grams %><small>g</small></span>
+        <span class="vital-label">Weight</span>
+      </div>
+    </div>
+    <% } %>
+    <% if (latestVitals.heart_rate) { %>
+    <div class="vital-card">
+      <div class="vital-icon heart">HR</div>
+      <div class="vital-info">
+        <span class="vital-value"><%= latestVitals.heart_rate %><small>bpm</small></span>
+        <span class="vital-label">Heart Rate</span>
+      </div>
+    </div>
+    <% } %>
+    <% if (latestVitals.oxygen_saturation) { %>
+    <div class="vital-card">
+      <div class="vital-icon o2">O2</div>
+      <div class="vital-info">
+        <span class="vital-value"><%= latestVitals.oxygen_saturation %><small>%</small></span>
+        <span class="vital-label">Oxygen Sat</span>
+      </div>
+    </div>
+    <% } %>
+    <% if (latestVitals.temperature) { %>
+    <div class="vital-card">
+      <div class="vital-icon temp">T</div>
+      <div class="vital-info">
+        <span class="vital-value"><%= latestVitals.temperature %><small>&deg;F</small></span>
+        <span class="vital-label">Temperature</span>
+      </div>
+    </div>
+    <% } %>
+    <% if (latestVitals.respiratory_support) { %>
+    <div class="vital-card wide">
+      <div class="vital-icon resp">R</div>
+      <div class="vital-info">
+        <span class="vital-value text"><%= latestVitals.respiratory_support %></span>
+        <span class="vital-label">Respiratory Support<% if (latestVitals.fio2) { %> &middot; FiO2 <%= latestVitals.fio2 %>%<% } %></span>
+      </div>
+    </div>
+    <% } %>
+  </div>
+
+  <% if (vitals.length >= 3) { %>
+  <div class="chart-container">
+    <canvas id="weightChart" height="200"></canvas>
+  </div>
+  <% } %>
+</section>
+<% } %>
+
+<% const achievedMilestones = []; const allMilestones = []; Object.values(milestones).forEach(arr => arr.forEach(m => { allMilestones.push(m); if (m.achieved) achievedMilestones.push(m); })); %>
+<% if (allMilestones.length > 0) { %>
+<section class="section milestones-snapshot">
+  <div class="section-header">
+    <h2>Milestones</h2>
+    <a href="/milestones" class="section-link">View all</a>
+  </div>
+  <div class="milestone-progress-bar">
+    <div class="milestone-progress-fill" style="width: <%= Math.round((achievedMilestones.length / allMilestones.length) * 100) %>%"></div>
+  </div>
+  <p class="milestone-progress-text"><strong><%= achievedMilestones.length %></strong> of <strong><%= allMilestones.length %></strong> milestones achieved</p>
+  <% if (achievedMilestones.length > 0) { %>
+  <div class="recent-milestones">
+    <% achievedMilestones.sort((a, b) => new Date(b.achieved_at) - new Date(a.achieved_at)).slice(0, 3).forEach(m => { %>
+    <div class="milestone-chip achieved">
+      <span class="check">&#10003;</span> <%= m.title %>
+    </div>
+    <% }); %>
+  </div>
+  <% } %>
+</section>
+<% } %>
+
+<% if (pinned) { %>
+<section class="section">
+  <div class="pinned-badge">Pinned Update</div>
+  <article class="update-card featured">
+    <div class="update-meta">
+      <span class="mood mood-<%= pinned.mood %>"><%= pinned.mood === 'great' ? 'Great day' : pinned.mood === 'good' ? 'Good day' : 'Tough day' %></span>
+      <time><%= new Date(pinned.created_at).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %></time>
+    </div>
+    <h2><a href="/update/<%= pinned.id %>"><%= pinned.title %></a></h2>
+    <% if (pinned.photo) { %>
+    <div class="update-photo"><img src="<%= pinned.photo %>" alt="<%= pinned.title %>" loading="lazy"></div>
+    <% } %>
+    <div class="update-preview"><%- pinned.content.substring(0, 300).replace(/\n/g, '<br>') %><%= pinned.content.length > 300 ? '...' : '' %></div>
+    <a href="/update/<%= pinned.id %>" class="read-more">Read full update</a>
+  </article>
+</section>
+<% } %>
+
+<section class="section">
+  <h2 class="section-title">Updates</h2>
+  <% if (updates.length === 0) { %>
+    <div class="empty-state"><p>No updates yet. Check back soon!</p></div>
+  <% } %>
+  <div class="updates-list">
+    <% updates.forEach(function(update) { %>
+      <% if (!pinned || update.id !== pinned.id) { %>
+      <article class="update-card">
+        <div class="update-meta">
+          <span class="mood mood-<%= update.mood %>"><%= update.mood === 'great' ? 'Great day' : update.mood === 'good' ? 'Good day' : 'Tough day' %></span>
+          <time><%= new Date(update.created_at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) %></time>
+        </div>
+        <h3><a href="/update/<%= update.id %>"><%= update.title %></a></h3>
+        <% if (update.photo) { %>
+        <div class="update-photo"><img src="<%= update.photo %>" alt="<%= update.title %>" loading="lazy"></div>
+        <% } %>
+        <div class="update-preview"><%- update.content.substring(0, 200).replace(/\n/g, '<br>') %><%= update.content.length > 200 ? '...' : '' %></div>
+        <a href="/update/<%= update.id %>" class="read-more">Read more</a>
+      </article>
+      <% } %>
+    <% }) %>
+  </div>
+</section>
+
+<% if (vitals.length >= 3) { %>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script>
+  const vitalsData = <%- JSON.stringify(vitals.reverse()) %>;
+  const weightData = vitalsData.filter(v => v.weight_grams).map(v => ({
+    x: new Date(v.recorded_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    y: v.weight_grams
+  }));
+
+  if (weightData.length >= 3) {
+    new Chart(document.getElementById('weightChart'), {
+      type: 'line',
+      data: {
+        labels: weightData.map(d => d.x),
+        datasets: [{
+          label: 'Weight (g)',
+          data: weightData.map(d => d.y),
+          borderColor: '#c2185b',
+          backgroundColor: 'rgba(194, 24, 91, 0.1)',
+          fill: true,
+          tension: 0.3,
+          pointBackgroundColor: '#c2185b',
+          pointRadius: 4,
+          pointHoverRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          title: { display: true, text: 'Weight Over Time', font: { size: 14, family: 'Inter' } }
+        },
+        scales: {
+          y: { title: { display: true, text: 'Grams' }, beginAtZero: false },
+          x: { title: { display: true, text: 'Date' } }
+        }
+      }
+    });
+  }
+</script>
+<% } %>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,73 @@
+<%- include('../partials/head', { pageTitle: 'Dashboard' }) %>
+
+<section class="admin-dashboard">
+  <div class="admin-header">
+    <h1>Dashboard</h1>
+    <div class="admin-header-actions">
+      <a href="/admin/new" class="btn btn-primary">+ New Update</a>
+    </div>
+  </div>
+
+  <div class="admin-quick-links">
+    <a href="/admin/vitals" class="quick-link-card">
+      <span class="ql-label">Record Vitals</span>
+    </a>
+    <a href="/admin/milestones" class="quick-link-card">
+      <span class="ql-label">Milestones</span>
+    </a>
+    <a href="/admin/settings" class="quick-link-card">
+      <span class="ql-label">Settings</span>
+    </a>
+  </div>
+
+  <% if (latestVitals) { %>
+  <div class="admin-summary">
+    <h3>Latest Vitals</h3>
+    <div class="admin-vitals-row">
+      <% if (latestVitals.weight_grams) { %><span><strong>Weight:</strong> <%= latestVitals.weight_grams %>g</span><% } %>
+      <% if (latestVitals.heart_rate) { %><span><strong>HR:</strong> <%= latestVitals.heart_rate %> bpm</span><% } %>
+      <% if (latestVitals.oxygen_saturation) { %><span><strong>SpO2:</strong> <%= latestVitals.oxygen_saturation %>%</span><% } %>
+      <% if (latestVitals.temperature) { %><span><strong>Temp:</strong> <%= latestVitals.temperature %>&deg;F</span><% } %>
+    </div>
+  </div>
+  <% } %>
+
+  <h2 style="margin: 1.5rem 0 1rem;">Updates</h2>
+
+  <% if (updates.length === 0) { %>
+    <div class="empty-state"><p>No updates yet. Click "New Update" to share the first update!</p></div>
+  <% } %>
+
+  <div class="admin-list">
+    <% updates.forEach(function(update) { %>
+      <div class="admin-item">
+        <div class="admin-item-info">
+          <div class="admin-item-top">
+            <span class="mood mood-<%= update.mood %>"><%= update.mood %></span>
+            <% if (update.pinned) { %><span class="pinned-indicator">Pinned</span><% } %>
+            <time><%= new Date(update.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></time>
+          </div>
+          <h3><%= update.title %></h3>
+          <p><%= update.content.substring(0, 100) %><%= update.content.length > 100 ? '...' : '' %></p>
+        </div>
+        <div class="admin-item-actions">
+          <a href="/admin/edit/<%= update.id %>" class="btn btn-small">Edit</a>
+          <% if (update.pinned) { %>
+            <form method="POST" action="/admin/unpin/<%= update.id %>" style="display:inline">
+              <button type="submit" class="btn btn-small btn-outline">Unpin</button>
+            </form>
+          <% } else { %>
+            <form method="POST" action="/admin/pin/<%= update.id %>" style="display:inline">
+              <button type="submit" class="btn btn-small btn-outline">Pin</button>
+            </form>
+          <% } %>
+          <form method="POST" action="/admin/delete/<%= update.id %>" style="display:inline" onsubmit="return confirm('Delete this update?')">
+            <button type="submit" class="btn btn-small btn-danger">Delete</button>
+          </form>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,285 @@
+const express = require('express');
+const session = require('express-session');
+const SQLiteStore = require('connect-sqlite3')(session);
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const db = require('./db');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Persistent storage paths
+const dataDir = process.env.DATA_DIR || path.join(__dirname, 'data');
+const uploadsDir = process.env.UPLOADS_DIR || path.join(__dirname, 'public/uploads');
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+
+// View engine
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+
+// Static files - serve uploads from persistent disk, rest from public/
+app.use('/uploads', express.static(uploadsDir));
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
+// Sessions
+app.use(session({
+  store: new SQLiteStore({ db: 'sessions.sqlite', dir: dataDir }),
+  secret: process.env.SESSION_SECRET || 'myla-fyi-secret-change-me',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
+}));
+
+// File upload config
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, uploadsDir),
+  filename: (_req, file, cb) => {
+    const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e6) + path.extname(file.originalname);
+    cb(null, uniqueName);
+  }
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = /jpeg|jpg|png|gif|webp/;
+    const ext = allowed.test(path.extname(file.originalname).toLowerCase());
+    const mime = allowed.test(file.mimetype);
+    cb(null, ext && mime);
+  }
+});
+
+// Auth middleware
+function requireAuth(req, res, next) {
+  if (req.session && req.session.authenticated) return next();
+  res.redirect('/admin/login');
+}
+
+// Make common data available to all views
+app.use((req, res, next) => {
+  res.locals.authenticated = req.session && req.session.authenticated;
+  res.locals.settings = db.getSettings();
+  next();
+});
+
+// Helper: compute age info from settings
+function getAgeInfo(settings) {
+  const birthDate = new Date(settings.birth_date + 'T00:00:00');
+  const dueDate = new Date(settings.due_date + 'T00:00:00');
+  const now = new Date();
+
+  const actualDays = Math.floor((now - birthDate) / (1000 * 60 * 60 * 24));
+  const correctedDays = Math.floor((now - dueDate) / (1000 * 60 * 60 * 24));
+  const daysToDueDate = Math.max(0, Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24)));
+
+  const gestWeeks = parseInt(settings.gestational_age_weeks) || 24;
+  const gestDays = parseInt(settings.gestational_age_days) || 0;
+  const correctedGestDays = (gestWeeks * 7 + gestDays) + actualDays;
+  const correctedGestWeeks = Math.floor(correctedGestDays / 7);
+  const correctedGestRemainder = correctedGestDays % 7;
+
+  return {
+    actualDays,
+    actualWeeks: Math.floor(actualDays / 7),
+    actualRemainder: actualDays % 7,
+    correctedDays: Math.max(0, correctedDays),
+    correctedWeeks: Math.floor(Math.max(0, correctedDays) / 7),
+    correctedRemainder: Math.max(0, correctedDays) % 7,
+    daysToDueDate,
+    correctedGestWeeks,
+    correctedGestRemainder,
+    nicuDays: actualDays,
+  };
+}
+
+// ============ PUBLIC ROUTES ============
+
+app.get('/', (_req, res) => {
+  const updates = db.getUpdates(10);
+  const pinned = db.getPinnedUpdate();
+  const latestVitals = db.getLatestVitals();
+  const vitals = db.getVitals(30);
+  const milestones = db.getMilestonesByCategory();
+  const settings = db.getSettings();
+  const ageInfo = getAgeInfo(settings);
+  res.render('index', { updates, pinned, latestVitals, vitals, milestones, ageInfo });
+});
+
+app.get('/update/:id', (req, res) => {
+  const update = db.getUpdate(req.params.id);
+  if (!update) return res.status(404).render('404');
+  res.render('update', { update });
+});
+
+app.get('/milestones', (_req, res) => {
+  const milestones = db.getMilestonesByCategory();
+  const settings = db.getSettings();
+  const ageInfo = getAgeInfo(settings);
+  res.render('milestones', { milestones, ageInfo });
+});
+
+app.get('/vitals', (_req, res) => {
+  const vitals = db.getVitals(90);
+  const settings = db.getSettings();
+  const ageInfo = getAgeInfo(settings);
+  res.render('vitals', { vitals, ageInfo });
+});
+
+// JSON endpoint for chart data
+app.get('/api/vitals', (_req, res) => {
+  const vitals = db.getVitals(90);
+  res.json(vitals.reverse());
+});
+
+// ============ ADMIN ROUTES ============
+
+app.get('/admin/login', (_req, res) => {
+  res.render('admin/login', { error: null });
+});
+
+app.post('/admin/login', (req, res) => {
+  const { password } = req.body;
+  const adminPassword = process.env.ADMIN_PASSWORD || 'myla3926';
+  if (password === adminPassword) {
+    req.session.authenticated = true;
+    return res.redirect('/admin');
+  }
+  res.render('admin/login', { error: 'Incorrect password. Please try again.' });
+});
+
+app.get('/admin/logout', (req, res) => {
+  req.session.destroy();
+  res.redirect('/');
+});
+
+app.get('/admin', requireAuth, (_req, res) => {
+  const updates = db.getUpdates();
+  const latestVitals = db.getLatestVitals();
+  const settings = db.getSettings();
+  const ageInfo = getAgeInfo(settings);
+  res.render('admin/dashboard', { updates, latestVitals, ageInfo });
+});
+
+// Updates
+app.get('/admin/new', requireAuth, (_req, res) => {
+  res.render('admin/editor', { update: null });
+});
+
+app.post('/admin/new', requireAuth, upload.single('photo'), (req, res) => {
+  const { title, content, mood } = req.body;
+  const photo = req.file ? '/uploads/' + req.file.filename : null;
+  db.createUpdate({ title, content, mood, photo });
+  res.redirect('/admin');
+});
+
+app.get('/admin/edit/:id', requireAuth, (req, res) => {
+  const update = db.getUpdate(req.params.id);
+  if (!update) return res.status(404).render('404');
+  res.render('admin/editor', { update });
+});
+
+app.post('/admin/edit/:id', requireAuth, upload.single('photo'), (req, res) => {
+  const { title, content, mood } = req.body;
+  const photo = req.file ? '/uploads/' + req.file.filename : null;
+  db.editUpdate(req.params.id, { title, content, mood, photo });
+  res.redirect('/admin');
+});
+
+app.post('/admin/delete/:id', requireAuth, (req, res) => {
+  db.deleteUpdate(req.params.id);
+  res.redirect('/admin');
+});
+
+app.post('/admin/pin/:id', requireAuth, (req, res) => {
+  db.pinUpdate(req.params.id);
+  res.redirect('/admin');
+});
+
+app.post('/admin/unpin/:id', requireAuth, (req, res) => {
+  db.unpinUpdate(req.params.id);
+  res.redirect('/admin');
+});
+
+// Vitals
+app.get('/admin/vitals', requireAuth, (_req, res) => {
+  const vitals = db.getVitals(30);
+  res.render('admin/vitals', { vitals });
+});
+
+app.post('/admin/vitals', requireAuth, (req, res) => {
+  db.createVital({
+    recorded_at: req.body.recorded_at || new Date().toISOString(),
+    weight_grams: req.body.weight_grams,
+    heart_rate: req.body.heart_rate,
+    respiratory_rate: req.body.respiratory_rate,
+    oxygen_saturation: req.body.oxygen_saturation,
+    temperature: req.body.temperature,
+    fio2: req.body.fio2,
+    respiratory_support: req.body.respiratory_support,
+    feeding_type: req.body.feeding_type,
+    feeding_volume_ml: req.body.feeding_volume_ml,
+    notes: req.body.notes,
+  });
+  res.redirect('/admin/vitals');
+});
+
+app.post('/admin/vitals/delete/:id', requireAuth, (req, res) => {
+  db.deleteVital(req.params.id);
+  res.redirect('/admin/vitals');
+});
+
+// Milestones
+app.get('/admin/milestones', requireAuth, (_req, res) => {
+  const milestones = db.getMilestonesByCategory();
+  res.render('admin/milestones', { milestones });
+});
+
+app.post('/admin/milestones/achieve/:id', requireAuth, (req, res) => {
+  db.achieveMilestone(req.params.id);
+  res.redirect('/admin/milestones');
+});
+
+app.post('/admin/milestones/unachieve/:id', requireAuth, (req, res) => {
+  db.unachieveMilestone(req.params.id);
+  res.redirect('/admin/milestones');
+});
+
+app.post('/admin/milestones/new', requireAuth, (req, res) => {
+  db.createMilestone({
+    category: req.body.category,
+    title: req.body.title,
+    description: req.body.description,
+    sort_order: req.body.sort_order,
+  });
+  res.redirect('/admin/milestones');
+});
+
+app.post('/admin/milestones/delete/:id', requireAuth, (req, res) => {
+  db.deleteMilestone(req.params.id);
+  res.redirect('/admin/milestones');
+});
+
+// Settings
+app.get('/admin/settings', requireAuth, (_req, res) => {
+  res.render('admin/settings');
+});
+
+app.post('/admin/settings', requireAuth, (req, res) => {
+  const fields = ['baby_name', 'birth_date', 'gestational_age_weeks', 'gestational_age_days', 'due_date', 'birth_weight_grams', 'nicu_name'];
+  for (const field of fields) {
+    if (req.body[field] !== undefined) db.setSetting(field, req.body[field]);
+  }
+  res.redirect('/admin/settings');
+});
+
+// 404
+app.use((_req, res) => {
+  res.status(404).render('404');
+});
+
+app.listen(PORT, () => {
+  console.log(`Myla.fyi running on http://localhost:${PORT}`);
+});

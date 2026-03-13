@@ -1,0 +1,71 @@
+<%- include('../partials/head', { pageTitle: 'Milestones' }) %>
+
+<section class="admin-editor">
+  <a href="/admin" class="back-link">&larr; Back to dashboard</a>
+
+  <h1>Manage Milestones</h1>
+
+  <% const categoryLabels = { breathing: 'Breathing', feeding: 'Feeding', growth: 'Growth', thermoregulation: 'Thermoregulation', firsts: 'Firsts' }; %>
+
+  <% Object.keys(milestones).forEach(cat => { %>
+  <div class="milestone-admin-section">
+    <h2><%= categoryLabels[cat] || cat %></h2>
+    <div class="admin-list">
+      <% milestones[cat].forEach(m => { %>
+      <div class="admin-item milestone-admin-item <%= m.achieved ? 'milestone-achieved' : '' %>">
+        <div class="admin-item-info">
+          <h3><%= m.achieved ? '&#10003; ' : '' %><%= m.title %></h3>
+          <% if (m.description) { %><p><%= m.description %></p><% } %>
+          <% if (m.achieved && m.achieved_at) { %>
+          <time class="milestone-date">Achieved: <%= new Date(m.achieved_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) %></time>
+          <% } %>
+        </div>
+        <div class="admin-item-actions">
+          <% if (m.achieved) { %>
+          <form method="POST" action="/admin/milestones/unachieve/<%= m.id %>" style="display:inline">
+            <button type="submit" class="btn btn-small btn-outline">Undo</button>
+          </form>
+          <% } else { %>
+          <form method="POST" action="/admin/milestones/achieve/<%= m.id %>" style="display:inline">
+            <button type="submit" class="btn btn-small btn-primary">Achieved!</button>
+          </form>
+          <% } %>
+          <form method="POST" action="/admin/milestones/delete/<%= m.id %>" style="display:inline" onsubmit="return confirm('Delete this milestone?')">
+            <button type="submit" class="btn btn-small btn-danger">Delete</button>
+          </form>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+  <% }) %>
+
+  <div class="milestone-admin-section">
+    <h2>Add Custom Milestone</h2>
+    <form method="POST" action="/admin/milestones/new" class="editor-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="category">Category</label>
+          <select id="category" name="category" required>
+            <option value="breathing">Breathing</option>
+            <option value="feeding">Feeding</option>
+            <option value="growth">Growth</option>
+            <option value="thermoregulation">Thermoregulation</option>
+            <option value="firsts">Firsts</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="title">Title</label>
+          <input type="text" id="title" name="title" required placeholder="e.g. First smile">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="description">Description (optional)</label>
+        <input type="text" id="description" name="description" placeholder="Brief description">
+      </div>
+      <button type="submit" class="btn btn-primary">Add Milestone</button>
+    </form>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

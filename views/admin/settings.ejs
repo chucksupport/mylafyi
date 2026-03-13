@@ -1,0 +1,51 @@
+<%- include('../partials/head', { pageTitle: 'Settings' }) %>
+
+<section class="admin-editor">
+  <a href="/admin" class="back-link">&larr; Back to dashboard</a>
+
+  <h1>Settings</h1>
+
+  <form method="POST" action="/admin/settings" class="editor-form">
+    <div class="form-row">
+      <div class="form-group">
+        <label for="baby_name">Baby's Name</label>
+        <input type="text" id="baby_name" name="baby_name" value="<%= settings.baby_name || '' %>">
+      </div>
+      <div class="form-group">
+        <label for="nicu_name">NICU / Hospital</label>
+        <input type="text" id="nicu_name" name="nicu_name" value="<%= settings.nicu_name || '' %>">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="birth_date">Birth Date</label>
+        <input type="date" id="birth_date" name="birth_date" value="<%= settings.birth_date || '' %>">
+      </div>
+      <div class="form-group">
+        <label for="due_date">Due Date</label>
+        <input type="date" id="due_date" name="due_date" value="<%= settings.due_date || '' %>">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="gestational_age_weeks">Gestational Age at Birth (weeks)</label>
+        <input type="number" id="gestational_age_weeks" name="gestational_age_weeks" value="<%= settings.gestational_age_weeks || '' %>">
+      </div>
+      <div class="form-group">
+        <label for="gestational_age_days">+ Days</label>
+        <input type="number" id="gestational_age_days" name="gestational_age_days" min="0" max="6" value="<%= settings.gestational_age_days || '0' %>">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="birth_weight_grams">Birth Weight (grams)</label>
+      <input type="number" id="birth_weight_grams" name="birth_weight_grams" value="<%= settings.birth_weight_grams || '' %>" placeholder="e.g. 680">
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-full">Save Settings</button>
+  </form>
+</section>
+
+<%- include('../partials/footer') %>

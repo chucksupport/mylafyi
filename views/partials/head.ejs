@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof pageTitle !== 'undefined' ? pageTitle + ' - ' : '' %>Myla.fyi</title>
+  <meta name="description" content="Follow Myla's journey - born early, growing strong.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="/" class="logo">M<span>yla</span>.fyi</a>
+      <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/milestones">Milestones</a>
+        <a href="/vitals">Vitals</a>
+        <% if (typeof authenticated !== 'undefined' && authenticated) { %>
+          <a href="/admin" class="nav-admin">Dashboard</a>
+          <a href="/admin/logout">Logout</a>
+        <% } %>
+      </div>
+      <button class="nav-toggle" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </nav>
+  </header>
+  <main>

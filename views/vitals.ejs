@@ -1,0 +1,99 @@
+<%- include('partials/head', { pageTitle: 'Vitals' }) %>
+
+<section class="page-header">
+  <h1>Vitals</h1>
+  <p class="subtitle">Tracking <%= settings.baby_name || 'Myla' %>'s vital signs over time</p>
+</section>
+
+<% if (vitals.length === 0) { %>
+<div class="empty-state"><p>No vitals recorded yet.</p></div>
+<% } else { %>
+
+<div class="charts-grid">
+  <div class="chart-card">
+    <canvas id="weightChart" height="250"></canvas>
+  </div>
+  <div class="chart-card">
+    <canvas id="heartRateChart" height="250"></canvas>
+  </div>
+  <div class="chart-card">
+    <canvas id="o2Chart" height="250"></canvas>
+  </div>
+  <div class="chart-card">
+    <canvas id="tempChart" height="250"></canvas>
+  </div>
+</div>
+
+<section class="section">
+  <h2>Recent Readings</h2>
+  <div class="vitals-table-wrap">
+    <table class="vitals-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Weight</th>
+          <th>HR</th>
+          <th>SpO2</th>
+          <th>Temp</th>
+          <th>Resp Support</th>
+          <th>FiO2</th>
+          <th>Feeding</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% vitals.forEach(v => { %>
+        <tr>
+          <td><%= new Date(v.recorded_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %></td>
+          <td><%= v.weight_grams ? v.weight_grams + 'g' : '-' %></td>
+          <td><%= v.heart_rate || '-' %></td>
+          <td><%= v.oxygen_saturation ? v.oxygen_saturation + '%' : '-' %></td>
+          <td><%= v.temperature ? v.temperature + '&deg;F' : '-' %></td>
+          <td><%= v.respiratory_support || '-' %></td>
+          <td><%= v.fio2 ? v.fio2 + '%' : '-' %></td>
+          <td><%= v.feeding_type ? v.feeding_type + (v.feeding_volume_ml ? ' (' + v.feeding_volume_ml + 'ml)' : '') : '-' %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script>
+  const vitals = <%- JSON.stringify(vitals.reverse()) %>;
+
+  function makeChart(id, label, color, dataFn, yLabel) {
+    const filtered = vitals.filter(v => dataFn(v) != null);
+    if (filtered.length < 2) return;
+    new Chart(document.getElementById(id), {
+      type: 'line',
+      data: {
+        labels: filtered.map(v => new Date(v.recorded_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+        datasets: [{
+          label,
+          data: filtered.map(v => dataFn(v)),
+          borderColor: color,
+          backgroundColor: color + '1a',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 3,
+          pointHoverRadius: 5,
+          pointBackgroundColor: color,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false }, title: { display: true, text: label, font: { size: 14, family: 'Inter' } } },
+        scales: { y: { title: { display: true, text: yLabel }, beginAtZero: false } }
+      }
+    });
+  }
+
+  makeChart('weightChart', 'Weight (g)', '#c2185b', v => v.weight_grams, 'Grams');
+  makeChart('heartRateChart', 'Heart Rate (bpm)', '#e57373', v => v.heart_rate, 'BPM');
+  makeChart('o2Chart', 'Oxygen Saturation (%)', '#42a5f5', v => v.oxygen_saturation, '%');
+  makeChart('tempChart', 'Temperature (\u00b0F)', '#ffa726', v => v.temperature, '\u00b0F');
+</script>
+<% } %>
+
+<%- include('partials/footer') %>
