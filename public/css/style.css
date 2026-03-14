@@ -606,117 +606,209 @@ nav {
   margin-top: 0.25rem;
 }
 
-/* ============ BABY MAP ============ */
-.baby-map-section {
+/* ============ SYSTEMS DASHBOARD ============ */
+.systems-dashboard {
   margin-bottom: 2.5rem;
 }
 
-.baby-map-container {
-  position: relative;
+.systems-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.65rem;
+}
+
+.system-card {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 0.75rem 1rem;
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: var(--radius);
-  padding: 2rem 1rem;
-  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+  transition: all 0.25s;
+  position: relative;
+  overflow: hidden;
 }
 
-.baby-map-svg {
-  width: 240px;
-  height: auto;
-  display: block;
-}
-
-.baby-region {
-  cursor: pointer;
-  transition: fill 0.2s, stroke 0.2s, filter 0.2s;
-}
-
-.baby-region:hover {
-  fill: rgba(16, 185, 129, 0.25) !important;
-  stroke: var(--emerald-400) !important;
-  stroke-width: 2.5;
-  filter: url(#glow);
-}
-
-.baby-region-label {
-  fill: var(--gray-500);
-  font-size: 11px;
-  font-family: 'Inter', sans-serif;
-  font-weight: 600;
-  pointer-events: all;
-  cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.baby-region-label-sm {
-  font-size: 8px;
-}
-
-.baby-map-hint {
-  text-align: center;
-  font-size: 0.8rem;
-  color: var(--gray-400);
-  margin-top: 0.75rem;
-}
-
-.baby-map-tooltip {
+.system-card::before {
+  content: '';
   position: absolute;
-  background: var(--gray-100);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-xs);
-  padding: 0.75rem 1rem;
-  min-width: 200px;
-  max-width: 260px;
+  inset: 0;
+  background: radial-gradient(circle at 50% 30%, rgba(52,211,153,0.0) 0%, transparent 70%);
+  transition: background 0.3s;
   pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.15s;
-  z-index: 200;
-  box-shadow: var(--shadow-lg);
 }
 
-.baby-map-tooltip.visible {
-  opacity: 1;
+.system-card:hover {
+  border-color: var(--gray-300);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+  color: inherit;
 }
 
-.baby-map-tooltip-title {
+.system-card:hover::before {
+  background: radial-gradient(circle at 50% 30%, rgba(52,211,153,0.04) 0%, transparent 70%);
+}
+
+.system-card.system-active {
+  border-color: rgba(52,211,153,0.15);
+}
+
+.system-card.system-active::before {
+  background: radial-gradient(circle at 50% 30%, rgba(52,211,153,0.04) 0%, transparent 70%);
+}
+
+.system-card.system-complete {
+  border-color: rgba(52,211,153,0.25);
+}
+
+.system-card.system-complete::before {
+  background: radial-gradient(circle at 50% 30%, rgba(52,211,153,0.08) 0%, transparent 70%);
+}
+
+/* Ring + Icon */
+.system-ring-wrap {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.system-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.ring-progress {
+  transition: stroke-dashoffset 0.6s ease, stroke 0.3s;
+}
+
+.system-card:hover .ring-progress {
+  stroke: var(--emerald-400) !important;
+  filter: drop-shadow(0 0 6px rgba(52,211,153,0.35));
+}
+
+.system-icon {
+  font-size: 1.75rem;
+  line-height: 1;
+  z-index: 1;
+}
+
+.system-complete-badge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  background: var(--emerald-500);
+  color: var(--bg);
+  border-radius: 50%;
+  font-size: 0.65rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 8px rgba(52,211,153,0.4);
+  z-index: 2;
+}
+
+/* Info */
+.system-info {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.system-label {
+  font-family: 'JetBrains Mono', 'SF Mono', monospace;
+  font-size: 0.68rem;
   font-weight: 700;
-  font-size: 0.9rem;
-  color: var(--gray-900);
-  margin-bottom: 0.2rem;
+  color: var(--gray-700);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
-.baby-map-tooltip-progress {
-  font-size: 0.75rem;
+.system-sub {
+  font-size: 0.7rem;
   color: var(--gray-400);
-  margin-bottom: 0.5rem;
-  font-weight: 600;
+  font-weight: 500;
 }
 
-.baby-map-tooltip-progress.all-done {
+.system-count {
+  font-family: 'JetBrains Mono', 'SF Mono', monospace;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--gray-600);
+  margin-top: 0.2rem;
+}
+
+.system-card.system-active .system-count {
+  color: rgba(52,211,153,0.7);
+}
+
+.system-card.system-complete .system-count {
   color: var(--emerald-400);
 }
 
-.tooltip-milestone {
-  font-size: 0.8rem;
-  color: var(--gray-500);
-  padding: 0.15rem 0;
-  line-height: 1.4;
+.system-count-sep {
+  font-weight: 400;
+  color: var(--gray-400);
+  margin: 0 1px;
 }
 
-.tooltip-milestone.done {
-  color: var(--emerald-400);
+/* Mini ticks — one per milestone */
+.system-ticks {
+  display: flex;
+  gap: 3px;
+  margin-top: 0.25rem;
 }
 
-@media (max-width: 640px) {
-  .baby-map-svg {
-    width: 200px;
+.system-tick {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gray-200);
+  transition: background 0.3s, box-shadow 0.3s;
+}
+
+.system-tick.tick-done {
+  background: var(--emerald-400);
+  box-shadow: 0 0 5px rgba(52,211,153,0.3);
+}
+
+@media (max-width: 768px) {
+  .systems-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .systems-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 
-  .baby-map-container {
-    padding: 1.5rem 0.5rem;
+  .system-card {
+    padding: 1rem 0.5rem 0.75rem;
+  }
+
+  .system-ring-wrap {
+    width: 60px;
+    height: 60px;
+  }
+
+  .system-icon {
+    font-size: 1.4rem;
+  }
+
+  .system-label {
+    font-size: 0.6rem;
   }
 }
 
