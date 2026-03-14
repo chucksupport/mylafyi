@@ -14,6 +14,12 @@
     <canvas id="weightChart" height="250"></canvas>
   </div>
   <div class="chart-card">
+    <canvas id="lengthChart" height="250"></canvas>
+  </div>
+  <div class="chart-card">
+    <canvas id="headChart" height="250"></canvas>
+  </div>
+  <div class="chart-card">
     <canvas id="heartRateChart" height="250"></canvas>
   </div>
   <div class="chart-card">
@@ -32,11 +38,13 @@
         <tr>
           <th>Date</th>
           <th>Weight</th>
+          <th>Length</th>
+          <th>Head Circ.</th>
           <th>HR</th>
           <th>SpO2</th>
           <th>Temp</th>
           <th>Resp Support</th>
-          <th>FiO2</th>
+          <th>Crib</th>
           <th>Feeding</th>
         </tr>
       </thead>
@@ -45,11 +53,13 @@
         <tr>
           <td><%= new Date(v.recorded_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %></td>
           <td><%= v.weight_grams ? v.weight_grams + 'g' : '-' %></td>
+          <td><%= v.length_cm ? v.length_cm + 'cm' : '-' %></td>
+          <td><%= v.head_circumference_cm ? v.head_circumference_cm + 'cm' : '-' %></td>
           <td><%= v.heart_rate || '-' %></td>
           <td><%= v.oxygen_saturation ? v.oxygen_saturation + '%' : '-' %></td>
-          <td><%= v.temperature ? v.temperature + '&deg;F' : '-' %></td>
+          <td><%= v.temperature ? v.temperature + '°F' : '-' %></td>
           <td><%= v.respiratory_support || '-' %></td>
-          <td><%= v.fio2 ? v.fio2 + '%' : '-' %></td>
+          <td><%= v.crib_type || '-' %></td>
           <td><%= v.feeding_type ? v.feeding_type + (v.feeding_volume_ml ? ' (' + v.feeding_volume_ml + 'ml)' : '') : '-' %></td>
         </tr>
         <% }) %>
@@ -64,7 +74,10 @@
 
   function makeChart(id, label, color, dataFn, yLabel) {
     const filtered = vitals.filter(v => dataFn(v) != null);
-    if (filtered.length < 2) return;
+    if (filtered.length < 2) {
+      document.getElementById(id).parentElement.style.display = 'none';
+      return;
+    }
     new Chart(document.getElementById(id), {
       type: 'line',
       data: {
@@ -90,6 +103,8 @@
   }
 
   makeChart('weightChart', 'Weight (g)', '#c2185b', v => v.weight_grams, 'Grams');
+  makeChart('lengthChart', 'Length (cm)', '#7c4dbd', v => v.length_cm, 'cm');
+  makeChart('headChart', 'Head Circumference (cm)', '#0ea5e9', v => v.head_circumference_cm, 'cm');
   makeChart('heartRateChart', 'Heart Rate (bpm)', '#e57373', v => v.heart_rate, 'BPM');
   makeChart('o2Chart', 'Oxygen Saturation (%)', '#42a5f5', v => v.oxygen_saturation, '%');
   makeChart('tempChart', 'Temperature (\u00b0F)', '#ffa726', v => v.temperature, '\u00b0F');

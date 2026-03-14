@@ -71,6 +71,23 @@ try {
   db.exec('UPDATE updates SET update_date = created_at WHERE update_date IS NULL');
 }
 
+// Migrate: add length_cm, head_circumference_cm, crib_type to vitals
+try {
+  db.prepare('SELECT length_cm FROM vitals LIMIT 1').get();
+} catch {
+  db.exec('ALTER TABLE vitals ADD COLUMN length_cm REAL');
+}
+try {
+  db.prepare('SELECT head_circumference_cm FROM vitals LIMIT 1').get();
+} catch {
+  db.exec('ALTER TABLE vitals ADD COLUMN head_circumference_cm REAL');
+}
+try {
+  db.prepare('SELECT crib_type FROM vitals LIMIT 1').get();
+} catch {
+  db.exec('ALTER TABLE vitals ADD COLUMN crib_type TEXT');
+}
+
 // Seed default milestones if empty
 const milestoneCount = db.prepare('SELECT COUNT(*) as count FROM milestones').get().count;
 if (milestoneCount === 0) {
@@ -195,14 +212,15 @@ module.exports = {
 
   createVital(data) {
     return db.prepare(`
-      INSERT INTO vitals (recorded_at, weight_grams, heart_rate, respiratory_rate, oxygen_saturation, temperature, fio2, respiratory_support, feeding_type, feeding_volume_ml, notes)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO vitals (recorded_at, weight_grams, length_cm, head_circumference_cm, heart_rate, oxygen_saturation, temperature, respiratory_support, crib_type, feeding_type, feeding_volume_ml, notes)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
-      data.recorded_at, data.weight_grams || null, data.heart_rate || null,
-      data.respiratory_rate || null, data.oxygen_saturation || null,
-      data.temperature || null, data.fio2 || null,
-      data.respiratory_support || null, data.feeding_type || null,
-      data.feeding_volume_ml || null, data.notes || null
+      data.recorded_at, data.weight_grams || null, data.length_cm || null,
+      data.head_circumference_cm || null, data.heart_rate || null,
+      data.oxygen_saturation || null, data.temperature || null,
+      data.respiratory_support || null, data.crib_type || null,
+      data.feeding_type || null, data.feeding_volume_ml || null,
+      data.notes || null
     );
   },
 

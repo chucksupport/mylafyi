@@ -26,12 +26,6 @@
         <span class="stat-label">Corrected Age</span>
       </div>
       <% } %>
-      <% if (latestVitals && latestVitals.weight_grams) { %>
-      <div class="stat-card">
-        <span class="stat-number"><%= latestVitals.weight_grams %><small>g</small></span>
-        <span class="stat-label">Latest Weight</span>
-      </div>
-      <% } %>
     </div>
   </div>
 </section>
@@ -45,16 +39,34 @@
   <div class="vitals-grid">
     <% if (latestVitals.weight_grams) { %>
     <div class="vital-card">
-      <div class="vital-icon">W</div>
+      <div class="vital-icon-emoji">&#x2696;&#xFE0F;</div>
       <div class="vital-info">
         <span class="vital-value"><%= latestVitals.weight_grams %><small>g</small></span>
         <span class="vital-label">Weight</span>
       </div>
     </div>
     <% } %>
+    <% if (latestVitals.length_cm) { %>
+    <div class="vital-card">
+      <div class="vital-icon-emoji">&#x1F4CF;</div>
+      <div class="vital-info">
+        <span class="vital-value"><%= latestVitals.length_cm %><small>cm</small></span>
+        <span class="vital-label">Length</span>
+      </div>
+    </div>
+    <% } %>
+    <% if (latestVitals.head_circumference_cm) { %>
+    <div class="vital-card">
+      <div class="vital-icon-emoji">&#x1F476;</div>
+      <div class="vital-info">
+        <span class="vital-value"><%= latestVitals.head_circumference_cm %><small>cm</small></span>
+        <span class="vital-label">Head Circ.</span>
+      </div>
+    </div>
+    <% } %>
     <% if (latestVitals.heart_rate) { %>
     <div class="vital-card">
-      <div class="vital-icon heart">HR</div>
+      <div class="vital-icon-emoji">&#x1F493;</div>
       <div class="vital-info">
         <span class="vital-value"><%= latestVitals.heart_rate %><small>bpm</small></span>
         <span class="vital-label">Heart Rate</span>
@@ -63,7 +75,7 @@
     <% } %>
     <% if (latestVitals.oxygen_saturation) { %>
     <div class="vital-card">
-      <div class="vital-icon o2">O2</div>
+      <div class="vital-icon-emoji">&#x1FAC1;</div>
       <div class="vital-info">
         <span class="vital-value"><%= latestVitals.oxygen_saturation %><small>%</small></span>
         <span class="vital-label">Oxygen Sat</span>
@@ -72,7 +84,7 @@
     <% } %>
     <% if (latestVitals.temperature) { %>
     <div class="vital-card">
-      <div class="vital-icon temp">T</div>
+      <div class="vital-icon-emoji">&#x1F321;&#xFE0F;</div>
       <div class="vital-info">
         <span class="vital-value"><%= latestVitals.temperature %><small>&deg;F</small></span>
         <span class="vital-label">Temperature</span>
@@ -80,11 +92,20 @@
     </div>
     <% } %>
     <% if (latestVitals.respiratory_support) { %>
-    <div class="vital-card wide">
-      <div class="vital-icon resp">R</div>
+    <div class="vital-card">
+      <div class="vital-icon-emoji">&#x1FAC1;</div>
       <div class="vital-info">
         <span class="vital-value text"><%= latestVitals.respiratory_support %></span>
-        <span class="vital-label">Respiratory Support<% if (latestVitals.fio2) { %> &middot; FiO2 <%= latestVitals.fio2 %>%<% } %></span>
+        <span class="vital-label">Respiratory Support</span>
+      </div>
+    </div>
+    <% } %>
+    <% if (latestVitals.crib_type) { %>
+    <div class="vital-card">
+      <div class="vital-icon-emoji">&#x1F6CF;&#xFE0F;</div>
+      <div class="vital-info">
+        <span class="vital-value text"><%= latestVitals.crib_type %></span>
+        <span class="vital-label">Crib Type</span>
       </div>
     </div>
     <% } %>
