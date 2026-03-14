@@ -12,12 +12,8 @@
     </div>
 
     <div class="form-group">
-      <label for="mood">How's it going?</label>
-      <select id="mood" name="mood">
-        <option value="great" <%= update && update.mood === 'great' ? 'selected' : '' %>>Great day</option>
-        <option value="good" <%= !update || update.mood === 'good' ? 'selected' : '' %>>Good day</option>
-        <option value="tough" <%= update && update.mood === 'tough' ? 'selected' : '' %>>Tough day</option>
-      </select>
+      <label for="update_date">Date & Time</label>
+      <input type="datetime-local" id="update_date" name="update_date" value="<%= update && update.update_date ? update.update_date.slice(0, 16) : new Date().toISOString().slice(0, 16) %>" required>
     </div>
 
     <div class="form-group">

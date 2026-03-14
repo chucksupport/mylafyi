@@ -63,6 +63,14 @@ try {
   db.exec('ALTER TABLE updates ADD COLUMN sentiment INTEGER DEFAULT 5');
 }
 
+// Migrate: add update_date column if missing
+try {
+  db.prepare('SELECT update_date FROM updates LIMIT 1').get();
+} catch {
+  db.exec('ALTER TABLE updates ADD COLUMN update_date DATETIME');
+  db.exec('UPDATE updates SET update_date = created_at WHERE update_date IS NULL');
+}
+
 // Seed default milestones if empty
 const milestoneCount = db.prepare('SELECT COUNT(*) as count FROM milestones').get().count;
 if (milestoneCount === 0) {
@@ -126,8 +134,8 @@ if (settingsCount === 0) {
 module.exports = {
   // Updates
   getUpdates(limit) {
-    if (limit) return db.prepare('SELECT * FROM updates ORDER BY created_at DESC LIMIT ?').all(limit);
-    return db.prepare('SELECT * FROM updates ORDER BY created_at DESC').all();
+    if (limit) return db.prepare('SELECT * FROM updates ORDER BY update_date DESC LIMIT ?').all(limit);
+    return db.prepare('SELECT * FROM updates ORDER BY update_date DESC').all();
   },
 
   getUpdate(id) {
@@ -138,21 +146,25 @@ module.exports = {
     return db.prepare('SELECT * FROM updates WHERE pinned = 1 ORDER BY updated_at DESC LIMIT 1').get();
   },
 
-  createUpdate({ title, content, mood, sentiment, photo }) {
+  createUpdate({ title, content, sentiment, photo, update_date }) {
+    const s = sentiment || 5;
+    const mood = s <= 3 ? 'tough' : s >= 8 ? 'great' : 'good';
     return db.prepare(
-      'INSERT INTO updates (title, content, mood, sentiment, photo) VALUES (?, ?, ?, ?, ?)'
-    ).run(title, content, mood || 'good', sentiment || 5, photo);
+      'INSERT INTO updates (title, content, mood, sentiment, photo, update_date) VALUES (?, ?, ?, ?, ?, ?)'
+    ).run(title, content, mood, s, photo, update_date || new Date().toISOString());
   },
 
-  editUpdate(id, { title, content, mood, sentiment, photo }) {
+  editUpdate(id, { title, content, sentiment, photo, update_date }) {
+    const s = sentiment || 5;
+    const mood = s <= 3 ? 'tough' : s >= 8 ? 'great' : 'good';
     if (photo) {
       return db.prepare(
-        'UPDATE updates SET title = ?, content = ?, mood = ?, sentiment = ?, photo = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
-      ).run(title, content, mood || 'good', sentiment || 5, photo, id);
+        'UPDATE updates SET title = ?, content = ?, mood = ?, sentiment = ?, photo = ?, update_date = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+      ).run(title, content, mood, s, photo, update_date, id);
     }
     return db.prepare(
-      'UPDATE updates SET title = ?, content = ?, mood = ?, sentiment = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
-    ).run(title, content, mood || 'good', sentiment || 5, id);
+      'UPDATE updates SET title = ?, content = ?, mood = ?, sentiment = ?, update_date = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+    ).run(title, content, mood, s, update_date, id);
   },
 
   deleteUpdate(id) {

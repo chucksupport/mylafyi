@@ -45,7 +45,7 @@
           <div class="admin-item-top">
             <span class="mood mood-<%= update.mood %>"><%= update.mood %></span>
             <% if (update.pinned) { %><span class="pinned-indicator">Pinned</span><% } %>
-            <time><%= new Date(update.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></time>
+            <time><%= new Date(update.update_date || update.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></time>
           </div>
           <h3><%= update.title %></h3>
           <p><%= update.content.substring(0, 100) %><%= update.content.length > 100 ? '...' : '' %></p>

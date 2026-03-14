@@ -199,9 +199,9 @@ app.get('/admin/new', requireAuth, (_req, res) => {
 });
 
 app.post('/admin/new', requireAuth, upload.single('photo'), (req, res) => {
-  const { title, content, mood, sentiment } = req.body;
+  const { title, content, sentiment, update_date } = req.body;
   const photo = req.file ? '/uploads/' + req.file.filename : null;
-  db.createUpdate({ title, content, mood, sentiment: parseInt(sentiment) || 5, photo });
+  db.createUpdate({ title, content, sentiment: parseInt(sentiment) || 5, photo, update_date });
   res.redirect('/admin');
 });
 
@@ -212,9 +212,9 @@ app.get('/admin/edit/:id', requireAuth, (req, res) => {
 });
 
 app.post('/admin/edit/:id', requireAuth, upload.single('photo'), (req, res) => {
-  const { title, content, mood, sentiment } = req.body;
+  const { title, content, sentiment, update_date } = req.body;
   const photo = req.file ? '/uploads/' + req.file.filename : null;
-  db.editUpdate(req.params.id, { title, content, mood, sentiment: parseInt(sentiment) || 5, photo });
+  db.editUpdate(req.params.id, { title, content, sentiment: parseInt(sentiment) || 5, photo, update_date });
   res.redirect('/admin');
 });
 
