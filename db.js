@@ -225,8 +225,9 @@ module.exports = {
     return grouped;
   },
 
-  achieveMilestone(id) {
-    return db.prepare('UPDATE milestones SET achieved = 1, achieved_at = CURRENT_TIMESTAMP WHERE id = ?').run(id);
+  achieveMilestone(id, date) {
+    const achieved_at = date ? new Date(date + 'T00:00:00').toISOString() : new Date().toISOString();
+    return db.prepare('UPDATE milestones SET achieved = 1, achieved_at = ? WHERE id = ?').run(achieved_at, id);
   },
 
   unachieveMilestone(id) {

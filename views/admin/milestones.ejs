@@ -14,7 +14,7 @@
       <% milestones[cat].forEach(m => { %>
       <div class="admin-item milestone-admin-item <%= m.achieved ? 'milestone-achieved' : '' %>">
         <div class="admin-item-info">
-          <h3><%= m.achieved ? '&#10003; ' : '' %><%= m.title %></h3>
+          <h3><% if (m.achieved) { %>&#10003; <% } %><%= m.title %></h3>
           <% if (m.description) { %><p><%= m.description %></p><% } %>
           <% if (m.achieved && m.achieved_at) { %>
           <time class="milestone-date">Achieved: <%= new Date(m.achieved_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) %></time>
@@ -26,7 +26,8 @@
             <button type="submit" class="btn btn-small btn-outline">Undo</button>
           </form>
           <% } else { %>
-          <form method="POST" action="/admin/milestones/achieve/<%= m.id %>" style="display:inline">
+          <form method="POST" action="/admin/milestones/achieve/<%= m.id %>" style="display:inline; display:flex; align-items:center; gap:0.5rem;">
+            <input type="date" name="achieved_date" value="<%= new Date().toISOString().slice(0, 10) %>" style="padding:0.25rem 0.5rem; border-radius:6px; border:1px solid var(--gray-600); background:var(--gray-800); color:var(--gray-100); font-size:0.8rem;">
             <button type="submit" class="btn btn-small btn-primary">Achieved!</button>
           </form>
           <% } %>

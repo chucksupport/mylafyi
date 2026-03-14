@@ -113,7 +113,7 @@
   <div class="recent-milestones">
     <% achievedMilestones.sort((a, b) => new Date(b.achieved_at) - new Date(a.achieved_at)).slice(0, 3).forEach(m => { %>
     <div class="milestone-chip achieved">
-      <span class="check">&#10003;</span> <%= m.title %>
+      <span class="check">&#10003;</span> <%- m.title %>
     </div>
     <% }); %>
   </div>

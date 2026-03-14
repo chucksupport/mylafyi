@@ -269,7 +269,7 @@ app.get('/admin/milestones', requireAuth, (_req, res) => {
 });
 
 app.post('/admin/milestones/achieve/:id', requireAuth, (req, res) => {
-  db.achieveMilestone(req.params.id);
+  db.achieveMilestone(req.params.id, req.body.achieved_date);
   res.redirect('/admin/milestones');
 });
 

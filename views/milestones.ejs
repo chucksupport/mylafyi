@@ -14,7 +14,7 @@
     <div class="milestone-list">
       <% milestones[cat].forEach(m => { %>
       <div class="milestone-item <%= m.achieved ? 'achieved' : '' %>">
-        <div class="milestone-check"><%= m.achieved ? '&#10003;' : '' %></div>
+        <div class="milestone-check"><% if (m.achieved) { %>&#10003;<% } %></div>
         <div class="milestone-info">
           <h3><%= m.title %></h3>
           <% if (m.description) { %><p><%= m.description %></p><% } %>
