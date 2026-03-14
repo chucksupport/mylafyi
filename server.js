@@ -74,7 +74,8 @@ app.use((req, res, next) => {
 
 // Helper: compute age info from settings
 function getAgeInfo(settings) {
-  const birthDate = new Date(settings.birth_date + 'T00:00:00');
+  const birthTime = settings.birth_time || '00:00';
+  const birthDate = new Date(settings.birth_date + 'T' + birthTime + ':00');
   const dueDate = new Date(settings.due_date + 'T00:00:00');
   const now = new Date();
 
@@ -298,7 +299,7 @@ app.get('/admin/settings', requireAuth, (_req, res) => {
 });
 
 app.post('/admin/settings', requireAuth, (req, res) => {
-  const fields = ['baby_name', 'birth_date', 'gestational_age_weeks', 'gestational_age_days', 'due_date', 'birth_weight_grams', 'nicu_name'];
+  const fields = ['baby_name', 'birth_date', 'birth_time', 'gestational_age_weeks', 'gestational_age_days', 'due_date', 'birth_weight_grams', 'nicu_name'];
   for (const field of fields) {
     if (req.body[field] !== undefined) db.setSetting(field, req.body[field]);
   }
