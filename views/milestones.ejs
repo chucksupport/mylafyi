@@ -5,11 +5,110 @@
   <p class="subtitle"><%= settings.baby_name || 'Myla' %>'s journey, one step at a time</p>
 </section>
 
-<% const categoryLabels = { breathing: 'Breathing', feeding: 'Feeding', growth: 'Growth', thermoregulation: 'Thermoregulation', firsts: 'Firsts' }; %>
+<%
+  const categoryLabels = { breathing: 'Breathing', feeding: 'Feeding', growth: 'Growth', thermoregulation: 'Thermoregulation', firsts: 'Firsts' };
+  // Compute per-category stats
+  const catStats = {};
+  Object.keys(milestones).forEach(cat => {
+    const items = milestones[cat];
+    const achieved = items.filter(m => m.achieved).length;
+    catStats[cat] = { total: items.length, achieved, complete: achieved === items.length && items.length > 0, pct: items.length ? Math.round((achieved / items.length) * 100) : 0 };
+  });
+%>
+
+<section class="baby-map-section">
+  <div class="baby-map-container">
+    <svg class="baby-map-svg" viewBox="0 0 300 420" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <radialGradient id="bodyGrad" cx="50%" cy="40%" r="60%">
+          <stop offset="0%" stop-color="rgba(255,255,255,0.06)"/>
+          <stop offset="100%" stop-color="rgba(255,255,255,0.02)"/>
+        </radialGradient>
+      </defs>
+
+      <!-- Baby silhouette base (gray outline) -->
+      <!-- Head -->
+      <ellipse cx="150" cy="80" rx="52" ry="58" fill="var(--gray-100)" stroke="var(--gray-300)" stroke-width="1.5"/>
+      <!-- Ears -->
+      <ellipse cx="96" cy="75" rx="10" ry="14" fill="var(--gray-100)" stroke="var(--gray-300)" stroke-width="1.5"/>
+      <ellipse cx="204" cy="75" rx="10" ry="14" fill="var(--gray-100)" stroke="var(--gray-300)" stroke-width="1.5"/>
+      <!-- Body -->
+      <path d="M115,135 C108,145 100,165 98,190 C96,215 100,250 105,275 L195,275 C200,250 204,215 202,190 C200,165 192,145 185,135 Z" fill="var(--gray-100)" stroke="var(--gray-300)" stroke-width="1.5"/>
+      <!-- Left arm -->
+      <path d="M98,165 C80,170 62,185 52,210 C48,220 50,228 55,230 C60,232 68,225 72,215 C78,198 85,188 98,185" fill="var(--gray-100)" stroke="var(--gray-300)" stroke-width="1.5"/>
+      <!-- Right arm -->
+      <path d="M202,165 C220,170 238,185 248,210 C252,220 250,228 245,230 C240,232 232,225 228,215 C222,198 215,188 202,185" fill="var(--gray-100)" stroke="var(--gray-300)" stroke-width="1.5"/>
+      <!-- Left leg -->
+      <path d="M115,270 C110,290 105,320 100,350 C97,365 100,375 108,378 C116,380 122,372 122,360 C122,340 120,310 125,275" fill="var(--gray-100)" stroke="var(--gray-300)" stroke-width="1.5"/>
+      <!-- Right leg -->
+      <path d="M185,270 C190,290 195,320 200,350 C203,365 200,375 192,378 C184,380 178,372 178,360 C178,340 180,310 175,275" fill="var(--gray-100)" stroke="var(--gray-300)" stroke-width="1.5"/>
+
+      <!-- Interactive regions -->
+
+      <!-- FIRSTS: Head region -->
+      <ellipse class="baby-region" data-category="firsts" cx="150" cy="80" rx="50" ry="56"
+        fill="<%= catStats.firsts ? (catStats.firsts.complete ? 'rgba(16,185,129,0.35)' : catStats.firsts.achieved > 0 ? 'rgba(16,185,129,' + (0.1 + catStats.firsts.pct * 0.0025) + ')' : 'rgba(255,255,255,0.03)') : 'rgba(255,255,255,0.03)' %>"
+        stroke="<%= catStats.firsts && catStats.firsts.complete ? 'var(--emerald-400)' : catStats.firsts && catStats.firsts.achieved > 0 ? 'rgba(16,185,129,0.4)' : 'transparent' %>" stroke-width="2"/>
+      <!-- Face features (decorative) -->
+      <ellipse cx="133" cy="75" rx="5" ry="6" fill="var(--gray-200)" opacity="0.6"/>
+      <ellipse cx="167" cy="75" rx="5" ry="6" fill="var(--gray-200)" opacity="0.6"/>
+      <path d="M142,95 Q150,103 158,95" fill="none" stroke="var(--gray-300)" stroke-width="1.5" stroke-linecap="round"/>
+
+      <!-- BREATHING: Chest region -->
+      <ellipse class="baby-region" data-category="breathing" cx="150" cy="175" rx="42" ry="32"
+        fill="<%= catStats.breathing ? (catStats.breathing.complete ? 'rgba(16,185,129,0.35)' : catStats.breathing.achieved > 0 ? 'rgba(16,185,129,' + (0.1 + catStats.breathing.pct * 0.0025) + ')' : 'rgba(255,255,255,0.03)') : 'rgba(255,255,255,0.03)' %>"
+        stroke="<%= catStats.breathing && catStats.breathing.complete ? 'var(--emerald-400)' : catStats.breathing && catStats.breathing.achieved > 0 ? 'rgba(16,185,129,0.4)' : 'transparent' %>" stroke-width="2"/>
+      <!-- Lung icons -->
+      <path d="M130,168 C125,172 123,180 128,185 C133,188 138,184 138,178 Z" fill="none" stroke="var(--gray-300)" stroke-width="1" opacity="0.5"/>
+      <path d="M170,168 C175,172 177,180 172,185 C167,188 162,184 162,178 Z" fill="none" stroke="var(--gray-300)" stroke-width="1" opacity="0.5"/>
+
+      <!-- FEEDING: Belly region -->
+      <ellipse class="baby-region" data-category="feeding" cx="150" cy="225" rx="38" ry="30"
+        fill="<%= catStats.feeding ? (catStats.feeding.complete ? 'rgba(16,185,129,0.35)' : catStats.feeding.achieved > 0 ? 'rgba(16,185,129,' + (0.1 + catStats.feeding.pct * 0.0025) + ')' : 'rgba(255,255,255,0.03)') : 'rgba(255,255,255,0.03)' %>"
+        stroke="<%= catStats.feeding && catStats.feeding.complete ? 'var(--emerald-400)' : catStats.feeding && catStats.feeding.achieved > 0 ? 'rgba(16,185,129,0.4)' : 'transparent' %>" stroke-width="2"/>
+
+      <!-- THERMOREGULATION: Hands -->
+      <circle class="baby-region" data-category="thermoregulation" cx="53" cy="222" r="18"
+        fill="<%= catStats.thermoregulation ? (catStats.thermoregulation.complete ? 'rgba(16,185,129,0.35)' : catStats.thermoregulation.achieved > 0 ? 'rgba(16,185,129,' + (0.1 + catStats.thermoregulation.pct * 0.0025) + ')' : 'rgba(255,255,255,0.03)') : 'rgba(255,255,255,0.03)' %>"
+        stroke="<%= catStats.thermoregulation && catStats.thermoregulation.complete ? 'var(--emerald-400)' : catStats.thermoregulation && catStats.thermoregulation.achieved > 0 ? 'rgba(16,185,129,0.4)' : 'transparent' %>" stroke-width="2"/>
+      <circle class="baby-region" data-category="thermoregulation" cx="247" cy="222" r="18"
+        fill="<%= catStats.thermoregulation ? (catStats.thermoregulation.complete ? 'rgba(16,185,129,0.35)' : catStats.thermoregulation.achieved > 0 ? 'rgba(16,185,129,' + (0.1 + catStats.thermoregulation.pct * 0.0025) + ')' : 'rgba(255,255,255,0.03)') : 'rgba(255,255,255,0.03)' %>"
+        stroke="<%= catStats.thermoregulation && catStats.thermoregulation.complete ? 'var(--emerald-400)' : catStats.thermoregulation && catStats.thermoregulation.achieved > 0 ? 'rgba(16,185,129,0.4)' : 'transparent' %>" stroke-width="2"/>
+
+      <!-- GROWTH: Feet -->
+      <ellipse class="baby-region" data-category="growth" cx="108" cy="374" rx="18" ry="12"
+        fill="<%= catStats.growth ? (catStats.growth.complete ? 'rgba(16,185,129,0.35)' : catStats.growth.achieved > 0 ? 'rgba(16,185,129,' + (0.1 + catStats.growth.pct * 0.0025) + ')' : 'rgba(255,255,255,0.03)') : 'rgba(255,255,255,0.03)' %>"
+        stroke="<%= catStats.growth && catStats.growth.complete ? 'var(--emerald-400)' : catStats.growth && catStats.growth.achieved > 0 ? 'rgba(16,185,129,0.4)' : 'transparent' %>" stroke-width="2"/>
+      <ellipse class="baby-region" data-category="growth" cx="192" cy="374" rx="18" ry="12"
+        fill="<%= catStats.growth ? (catStats.growth.complete ? 'rgba(16,185,129,0.35)' : catStats.growth.achieved > 0 ? 'rgba(16,185,129,' + (0.1 + catStats.growth.pct * 0.0025) + ')' : 'rgba(255,255,255,0.03)') : 'rgba(255,255,255,0.03)' %>"
+        stroke="<%= catStats.growth && catStats.growth.complete ? 'var(--emerald-400)' : catStats.growth && catStats.growth.achieved > 0 ? 'rgba(16,185,129,0.4)' : 'transparent' %>" stroke-width="2"/>
+
+      <!-- Category labels on the body -->
+      <text x="150" y="48" text-anchor="middle" class="baby-region-label" data-category="firsts">Firsts</text>
+      <text x="150" y="162" text-anchor="middle" class="baby-region-label" data-category="breathing">Breathing</text>
+      <text x="150" y="230" text-anchor="middle" class="baby-region-label" data-category="feeding">Feeding</text>
+      <text x="53" y="250" text-anchor="middle" class="baby-region-label baby-region-label-sm" data-category="thermoregulation">Temp</text>
+      <text x="247" y="250" text-anchor="middle" class="baby-region-label baby-region-label-sm" data-category="thermoregulation">Temp</text>
+      <text x="150" y="400" text-anchor="middle" class="baby-region-label" data-category="growth">Growth</text>
+    </svg>
+
+    <!-- Tooltip -->
+    <div class="baby-map-tooltip" id="babyMapTooltip">
+      <div class="baby-map-tooltip-title" id="tooltipTitle"></div>
+      <div class="baby-map-tooltip-progress" id="tooltipProgress"></div>
+      <div class="baby-map-tooltip-list" id="tooltipList"></div>
+    </div>
+  </div>
+  <p class="baby-map-hint">Hover over a region to see milestones</p>
+</section>
 
 <div class="milestones-page">
   <% Object.keys(milestones).forEach(cat => { %>
-  <section class="milestone-category">
+  <section class="milestone-category" id="cat-<%= cat %>">
     <h2 class="category-title"><%= categoryLabels[cat] || cat %></h2>
     <div class="milestone-list">
       <% milestones[cat].forEach(m => { %>
@@ -28,5 +127,59 @@
   </section>
   <% }) %>
 </div>
+
+<script>
+(function() {
+  const milestoneData = <%- JSON.stringify(
+    Object.keys(milestones).reduce((acc, cat) => {
+      acc[cat] = milestones[cat].map(m => ({
+        title: m.title,
+        achieved: !!m.achieved,
+        achieved_at: m.achieved_at
+      }));
+      return acc;
+    }, {})
+  ) %>;
+
+  const labels = { breathing: 'Breathing', feeding: 'Feeding', growth: 'Growth', thermoregulation: 'Thermoregulation', firsts: 'Firsts' };
+  const tooltip = document.getElementById('babyMapTooltip');
+  const tooltipTitle = document.getElementById('tooltipTitle');
+  const tooltipProgress = document.getElementById('tooltipProgress');
+  const tooltipList = document.getElementById('tooltipList');
+
+  document.querySelectorAll('.baby-region, .baby-region-label').forEach(el => {
+    const cat = el.dataset.category;
+    if (!cat || !milestoneData[cat]) return;
+
+    el.addEventListener('mouseenter', function(e) {
+      const items = milestoneData[cat];
+      const achieved = items.filter(m => m.achieved).length;
+      tooltipTitle.textContent = labels[cat] || cat;
+      tooltipProgress.textContent = achieved + ' / ' + items.length + ' complete';
+      tooltipProgress.className = 'baby-map-tooltip-progress' + (achieved === items.length ? ' all-done' : '');
+      tooltipList.innerHTML = items.map(m =>
+        '<div class="tooltip-milestone ' + (m.achieved ? 'done' : '') + '">' +
+        (m.achieved ? '&#10003; ' : '&#9675; ') + m.title + '</div>'
+      ).join('');
+      tooltip.classList.add('visible');
+    });
+
+    el.addEventListener('mousemove', function(e) {
+      const rect = document.querySelector('.baby-map-container').getBoundingClientRect();
+      tooltip.style.left = (e.clientX - rect.left + 16) + 'px';
+      tooltip.style.top = (e.clientY - rect.top - 10) + 'px';
+    });
+
+    el.addEventListener('mouseleave', function() {
+      tooltip.classList.remove('visible');
+    });
+
+    el.addEventListener('click', function() {
+      const section = document.getElementById('cat-' + cat);
+      if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+})();
+</script>
 
 <%- include('partials/footer') %>

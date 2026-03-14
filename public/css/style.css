@@ -606,6 +606,120 @@ nav {
   margin-top: 0.25rem;
 }
 
+/* ============ BABY MAP ============ */
+.baby-map-section {
+  margin-bottom: 2.5rem;
+}
+
+.baby-map-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 2rem 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.baby-map-svg {
+  width: 240px;
+  height: auto;
+  display: block;
+}
+
+.baby-region {
+  cursor: pointer;
+  transition: fill 0.2s, stroke 0.2s, filter 0.2s;
+}
+
+.baby-region:hover {
+  fill: rgba(16, 185, 129, 0.25) !important;
+  stroke: var(--emerald-400) !important;
+  stroke-width: 2.5;
+  filter: url(#glow);
+}
+
+.baby-region-label {
+  fill: var(--gray-500);
+  font-size: 11px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  pointer-events: all;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.baby-region-label-sm {
+  font-size: 8px;
+}
+
+.baby-map-hint {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--gray-400);
+  margin-top: 0.75rem;
+}
+
+.baby-map-tooltip {
+  position: absolute;
+  background: var(--gray-100);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-xs);
+  padding: 0.75rem 1rem;
+  min-width: 200px;
+  max-width: 260px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 200;
+  box-shadow: var(--shadow-lg);
+}
+
+.baby-map-tooltip.visible {
+  opacity: 1;
+}
+
+.baby-map-tooltip-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--gray-900);
+  margin-bottom: 0.2rem;
+}
+
+.baby-map-tooltip-progress {
+  font-size: 0.75rem;
+  color: var(--gray-400);
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.baby-map-tooltip-progress.all-done {
+  color: var(--emerald-400);
+}
+
+.tooltip-milestone {
+  font-size: 0.8rem;
+  color: var(--gray-500);
+  padding: 0.15rem 0;
+  line-height: 1.4;
+}
+
+.tooltip-milestone.done {
+  color: var(--emerald-400);
+}
+
+@media (max-width: 640px) {
+  .baby-map-svg {
+    width: 200px;
+  }
+
+  .baby-map-container {
+    padding: 1.5rem 0.5rem;
+  }
+}
+
 /* ============ MOOD BADGES ============ */
 .mood {
   display: inline-block;
