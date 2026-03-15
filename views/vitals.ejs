@@ -28,6 +28,9 @@
   <div class="chart-card">
     <canvas id="tempChart" height="250"></canvas>
   </div>
+  <div class="chart-card">
+    <canvas id="fio2Chart" height="250"></canvas>
+  </div>
 </div>
 
 <section class="section">
@@ -44,6 +47,7 @@
           <th>SpO2</th>
           <th>Temp</th>
           <th>Resp Support</th>
+          <th>FiO2</th>
           <th>Crib</th>
           <th>Feeding</th>
         </tr>
@@ -59,8 +63,9 @@
           <td><%= v.oxygen_saturation ? v.oxygen_saturation + '%' : '-' %></td>
           <td><%= v.temperature ? v.temperature + '°F' : '-' %></td>
           <td><%= v.respiratory_support || '-' %></td>
+          <td><%= v.fio2 ? v.fio2 + '%' : '-' %></td>
           <td><%= v.crib_type || '-' %></td>
-          <td><%= v.feeding_type ? v.feeding_type + (v.feeding_volume_ml ? ' (' + v.feeding_volume_ml + 'ml)' : '') : '-' %></td>
+          <td><%= v.feeding_type ? v.feeding_type + (v.feeding_volume_ml ? ' ' + v.feeding_volume_ml + 'ml' : '') + (v.feeding_frequency_minutes ? ' q' + (v.feeding_frequency_minutes >= 60 ? (v.feeding_frequency_minutes / 60) + 'h' : v.feeding_frequency_minutes + 'min') : '') : '-' %></td>
         </tr>
         <% }) %>
       </tbody>
@@ -108,6 +113,7 @@
   makeChart('heartRateChart', 'Heart Rate (bpm)', '#e57373', v => v.heart_rate, 'BPM');
   makeChart('o2Chart', 'Oxygen Saturation (%)', '#42a5f5', v => v.oxygen_saturation, '%');
   makeChart('tempChart', 'Temperature (\u00b0F)', '#ffa726', v => v.temperature, '\u00b0F');
+  makeChart('fio2Chart', 'FiO2 (%)', '#ab47bc', v => v.fio2, '%');
 </script>
 <% } %>
 

@@ -5,6 +5,7 @@
 
   <h1>Record Vitals</h1>
 
+  <% const prev = latest || {}; %>
   <form method="POST" action="/admin/vitals" class="editor-form">
     <div class="form-row">
       <div class="form-group">
@@ -16,18 +17,18 @@
     <div class="form-row">
       <div class="form-group">
         <label for="weight_grams">Weight (grams)</label>
-        <input type="number" id="weight_grams" name="weight_grams" step="1" placeholder="e.g. 680">
+        <input type="number" id="weight_grams" name="weight_grams" step="1" placeholder="e.g. 680" value="<%= prev.weight_grams || '' %>">
       </div>
       <div class="form-group">
         <label for="length_cm">Length (cm)</label>
-        <input type="number" id="length_cm" name="length_cm" step="0.1" placeholder="e.g. 30.5">
+        <input type="number" id="length_cm" name="length_cm" step="0.1" placeholder="e.g. 30.5" value="<%= prev.length_cm || '' %>">
       </div>
     </div>
 
     <div class="form-row">
       <div class="form-group">
         <label for="head_circumference_cm">Head Circumference (cm)</label>
-        <input type="number" id="head_circumference_cm" name="head_circumference_cm" step="0.1" placeholder="e.g. 22">
+        <input type="number" id="head_circumference_cm" name="head_circumference_cm" step="0.1" placeholder="e.g. 22" value="<%= prev.head_circumference_cm || '' %>">
       </div>
     </div>
 
@@ -36,21 +37,25 @@
         <label for="respiratory_support">Respiratory Support</label>
         <select id="respiratory_support" name="respiratory_support">
           <option value="">-- Select --</option>
-          <option value="High-frequency ventilator">High-frequency ventilator</option>
-          <option value="Conventional ventilator">Conventional ventilator</option>
-          <option value="CPAP">CPAP</option>
-          <option value="Nasal cannula">Nasal cannula</option>
-          <option value="Room air">Room air</option>
+          <% ['High-frequency ventilator', 'Conventional ventilator', 'CPAP', 'Nasal cannula', 'Room air'].forEach(opt => { %>
+          <option value="<%= opt %>" <%= prev.respiratory_support === opt ? 'selected' : '' %>><%= opt %></option>
+          <% }) %>
         </select>
       </div>
+      <div class="form-group">
+        <label for="fio2">FiO2 (%)</label>
+        <input type="number" id="fio2" name="fio2" step="1" min="21" max="100" placeholder="e.g. 30" value="<%= prev.fio2 || '' %>">
+      </div>
+    </div>
+
+    <div class="form-row">
       <div class="form-group">
         <label for="crib_type">Crib Type</label>
         <select id="crib_type" name="crib_type">
           <option value="">-- Select --</option>
-          <option value="Isolette (closed)">Isolette (closed)</option>
-          <option value="Isolette (open top)">Isolette (open top)</option>
-          <option value="Open crib">Open crib</option>
-          <option value="Bassinet">Bassinet</option>
+          <% ['Isolette (closed)', 'Isolette (open top)', 'Open crib', 'Bassinet'].forEach(opt => { %>
+          <option value="<%= opt %>" <%= prev.crib_type === opt ? 'selected' : '' %>><%= opt %></option>
+          <% }) %>
         </select>
       </div>
     </div>
@@ -60,17 +65,18 @@
         <label for="feeding_type">Feeding Type</label>
         <select id="feeding_type" name="feeding_type">
           <option value="">-- Select --</option>
-          <option value="TPN (IV nutrition)">TPN (IV nutrition)</option>
-          <option value="Trophic feeds">Trophic feeds</option>
-          <option value="Gavage (tube)">Gavage (tube)</option>
-          <option value="Breast">Breast</option>
-          <option value="Bottle">Bottle</option>
-          <option value="Breast + bottle">Breast + bottle</option>
+          <% ['TPN (IV nutrition)', 'Trophic feeds', 'Gavage (tube)', 'Breast', 'Bottle', 'Breast + bottle'].forEach(opt => { %>
+          <option value="<%= opt %>" <%= prev.feeding_type === opt ? 'selected' : '' %>><%= opt %></option>
+          <% }) %>
         </select>
       </div>
       <div class="form-group">
         <label for="feeding_volume_ml">Feeding Volume (ml)</label>
-        <input type="number" id="feeding_volume_ml" name="feeding_volume_ml" step="0.1" placeholder="e.g. 12">
+        <input type="number" id="feeding_volume_ml" name="feeding_volume_ml" step="0.1" placeholder="e.g. 12" value="<%= prev.feeding_volume_ml || '' %>">
+      </div>
+      <div class="form-group">
+        <label for="feeding_frequency_minutes">Feeding Every (minutes)</label>
+        <input type="number" id="feeding_frequency_minutes" name="feeding_frequency_minutes" step="1" placeholder="e.g. 180" value="<%= prev.feeding_frequency_minutes || '' %>">
       </div>
     </div>
 
@@ -96,6 +102,8 @@
           <% if (v.length_cm) { %>L: <%= v.length_cm %>cm &nbsp;<% } %>
           <% if (v.head_circumference_cm) { %>HC: <%= v.head_circumference_cm %>cm &nbsp;<% } %>
           <% if (v.respiratory_support) { %><%= v.respiratory_support %> &nbsp;<% } %>
+          <% if (v.fio2) { %>FiO2: <%= v.fio2 %>% &nbsp;<% } %>
+          <% if (v.feeding_frequency_minutes) { %>q<%= v.feeding_frequency_minutes >= 60 ? (v.feeding_frequency_minutes / 60) + 'h' : v.feeding_frequency_minutes + 'min' %> &nbsp;<% } %>
           <% if (v.crib_type) { %><%= v.crib_type %><% } %>
         </p>
       </div>
