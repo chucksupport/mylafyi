@@ -34,6 +34,32 @@
 
     <div class="form-row">
       <div class="form-group">
+        <label for="temperature">Temperature (&deg;F)</label>
+        <input type="number" id="temperature" name="temperature" step="0.1" placeholder="e.g. 98.6" value="<%= prev.temperature || '' %>">
+      </div>
+      <div class="form-group">
+        <label for="heart_rate">Heart Rate (bpm)</label>
+        <input type="number" id="heart_rate" name="heart_rate" step="1" placeholder="e.g. 150" value="<%= prev.heart_rate || '' %>">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="respiratory_rate">Respirations (breaths/min)</label>
+        <input type="number" id="respiratory_rate" name="respiratory_rate" step="1" placeholder="e.g. 40" value="<%= prev.respiratory_rate || '' %>">
+      </div>
+      <div class="form-group">
+        <label for="blood_pressure">Blood Pressure</label>
+        <input type="text" id="blood_pressure" name="blood_pressure" placeholder="e.g. 60/35" value="<%= prev.blood_pressure || '' %>">
+      </div>
+      <div class="form-group">
+        <label for="oxygen_saturation">SpO2 (%)</label>
+        <input type="number" id="oxygen_saturation" name="oxygen_saturation" step="1" min="0" max="100" placeholder="e.g. 95" value="<%= prev.oxygen_saturation || '' %>">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
         <label for="respiratory_support">Respiratory Support</label>
         <select id="respiratory_support" name="respiratory_support">
           <option value="">-- Select --</option>
@@ -101,6 +127,11 @@
           <% if (v.weight_grams) { %>Wt: <%= v.weight_grams %>g &nbsp;<% } %>
           <% if (v.length_cm) { %>L: <%= v.length_cm %>cm &nbsp;<% } %>
           <% if (v.head_circumference_cm) { %>HC: <%= v.head_circumference_cm %>cm &nbsp;<% } %>
+          <% if (v.temperature) { %>T: <%= v.temperature %>&deg;F &nbsp;<% } %>
+          <% if (v.heart_rate) { %>HR: <%= v.heart_rate %> &nbsp;<% } %>
+          <% if (v.respiratory_rate) { %>RR: <%= v.respiratory_rate %> &nbsp;<% } %>
+          <% if (v.blood_pressure) { %>BP: <%= v.blood_pressure %> &nbsp;<% } %>
+          <% if (v.oxygen_saturation) { %>SpO2: <%= v.oxygen_saturation %>% &nbsp;<% } %>
           <% if (v.respiratory_support) { %><%= v.respiratory_support %> &nbsp;<% } %>
           <% if (v.fio2) { %>FiO2: <%= v.fio2 %>% &nbsp;<% } %>
           <% if (v.feeding_frequency_minutes) { %>q<%= v.feeding_frequency_minutes >= 60 ? (v.feeding_frequency_minutes / 60) + 'h' : v.feeding_frequency_minutes + 'min' %> &nbsp;<% } %>

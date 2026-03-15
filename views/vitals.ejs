@@ -22,6 +22,18 @@
   <div class="chart-card">
     <canvas id="fio2Chart" height="250"></canvas>
   </div>
+  <div class="chart-card">
+    <canvas id="heartRateChart" height="250"></canvas>
+  </div>
+  <div class="chart-card">
+    <canvas id="spo2Chart" height="250"></canvas>
+  </div>
+  <div class="chart-card">
+    <canvas id="tempChart" height="250"></canvas>
+  </div>
+  <div class="chart-card">
+    <canvas id="respChart" height="250"></canvas>
+  </div>
 </div>
 
 <section class="section">
@@ -34,6 +46,11 @@
           <th>Weight</th>
           <th>Length</th>
           <th>Head Circ.</th>
+          <th>Temp</th>
+          <th>HR</th>
+          <th>RR</th>
+          <th>BP</th>
+          <th>SpO2</th>
           <th>Resp Support</th>
           <th>FiO2</th>
           <th>Crib</th>
@@ -47,6 +64,11 @@
           <td><%= v.weight_grams ? v.weight_grams + 'g' : '-' %></td>
           <td><%= v.length_cm ? v.length_cm + 'cm' : '-' %></td>
           <td><%= v.head_circumference_cm ? v.head_circumference_cm + 'cm' : '-' %></td>
+          <td><%= v.temperature ? v.temperature + '°F' : '-' %></td>
+          <td><%= v.heart_rate || '-' %></td>
+          <td><%= v.respiratory_rate || '-' %></td>
+          <td><%= v.blood_pressure || '-' %></td>
+          <td><%= v.oxygen_saturation ? v.oxygen_saturation + '%' : '-' %></td>
           <td><%= v.respiratory_support || '-' %></td>
           <td><%= v.fio2 ? v.fio2 + '%' : '-' %></td>
           <td><%= v.crib_type || '-' %></td>
@@ -96,6 +118,10 @@
   makeChart('lengthChart', 'Length (cm)', '#7c4dbd', v => v.length_cm, 'cm');
   makeChart('headChart', 'Head Circumference (cm)', '#0ea5e9', v => v.head_circumference_cm, 'cm');
   makeChart('fio2Chart', 'FiO2 (%)', '#ab47bc', v => v.fio2, '%');
+  makeChart('heartRateChart', 'Heart Rate (bpm)', '#e53935', v => v.heart_rate, 'bpm');
+  makeChart('spo2Chart', 'SpO2 (%)', '#43a047', v => v.oxygen_saturation, '%');
+  makeChart('tempChart', 'Temperature (°F)', '#ff9800', v => v.temperature, '°F');
+  makeChart('respChart', 'Respirations (breaths/min)', '#00897b', v => v.respiratory_rate, 'breaths/min');
 </script>
 <% } %>
 
