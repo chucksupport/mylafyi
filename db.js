@@ -95,6 +95,13 @@ try {
   db.exec('ALTER TABLE vitals ADD COLUMN feeding_frequency_minutes INTEGER');
 }
 
+// Migrate: add blood_pressure to vitals
+try {
+  db.prepare('SELECT blood_pressure FROM vitals LIMIT 1').get();
+} catch {
+  db.exec('ALTER TABLE vitals ADD COLUMN blood_pressure TEXT');
+}
+
 // Seed default milestones if empty
 const milestoneCount = db.prepare('SELECT COUNT(*) as count FROM milestones').get().count;
 if (milestoneCount === 0) {
@@ -227,13 +234,14 @@ module.exports = {
 
   createVital(data) {
     return db.prepare(`
-      INSERT INTO vitals (recorded_at, weight_grams, length_cm, head_circumference_cm, heart_rate, oxygen_saturation, temperature, fio2, respiratory_support, crib_type, feeding_type, feeding_volume_ml, feeding_frequency_minutes, notes)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO vitals (recorded_at, weight_grams, length_cm, head_circumference_cm, heart_rate, respiratory_rate, oxygen_saturation, temperature, blood_pressure, fio2, respiratory_support, crib_type, feeding_type, feeding_volume_ml, feeding_frequency_minutes, notes)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       data.recorded_at, data.weight_grams || null, data.length_cm || null,
       data.head_circumference_cm || null, data.heart_rate || null,
+      data.respiratory_rate || null,
       data.oxygen_saturation || null, data.temperature || null,
-      data.fio2 || null,
+      data.blood_pressure || null, data.fio2 || null,
       data.respiratory_support || null, data.crib_type || null,
       data.feeding_type || null, data.feeding_volume_ml || null,
       data.feeding_frequency_minutes || null,
