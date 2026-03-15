@@ -249,6 +249,30 @@ module.exports = {
     );
   },
 
+  getVital(id) {
+    return db.prepare('SELECT * FROM vitals WHERE id = ?').get(id);
+  },
+
+  editVital(id, data) {
+    return db.prepare(`
+      UPDATE vitals SET recorded_at = ?, weight_grams = ?, length_cm = ?, head_circumference_cm = ?,
+        heart_rate = ?, respiratory_rate = ?, oxygen_saturation = ?, temperature = ?,
+        blood_pressure = ?, fio2 = ?, respiratory_support = ?, crib_type = ?,
+        feeding_type = ?, feeding_volume_ml = ?, feeding_frequency_minutes = ?, notes = ?
+      WHERE id = ?
+    `).run(
+      data.recorded_at, data.weight_grams || null, data.length_cm || null,
+      data.head_circumference_cm || null, data.heart_rate || null,
+      data.respiratory_rate || null,
+      data.oxygen_saturation || null, data.temperature || null,
+      data.blood_pressure || null, data.fio2 || null,
+      data.respiratory_support || null, data.crib_type || null,
+      data.feeding_type || null, data.feeding_volume_ml || null,
+      data.feeding_frequency_minutes || null,
+      data.notes || null, id
+    );
+  },
+
   deleteVital(id) {
     return db.prepare('DELETE FROM vitals WHERE id = ?').run(id);
   },
