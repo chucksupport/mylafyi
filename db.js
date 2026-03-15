@@ -126,6 +126,11 @@ if (milestoneCount === 0) {
     ['firsts', 'Passed hearing screening', '', 50],
     ['firsts', 'Passed car seat test', '', 60],
     ['firsts', 'Going home', 'Discharged from NICU', 70],
+    // IV & Lines
+    ['iv_and_lines', 'UAC/UVC removed', 'Umbilical lines no longer needed', 10],
+    ['iv_and_lines', 'PICC line placed', 'Peripherally inserted central catheter', 20],
+    ['iv_and_lines', 'PICC line removed', 'No longer needs central line', 30],
+    ['iv_and_lines', 'Last IV removed', 'No more IV access needed', 40],
   ];
 
   const insert = db.prepare('INSERT INTO milestones (category, title, description, sort_order) VALUES (?, ?, ?, ?)');
