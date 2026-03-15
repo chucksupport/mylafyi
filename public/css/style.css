@@ -111,6 +111,18 @@ nav {
   letter-spacing: -1px;
 }
 
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.logo-icon {
+  width: 1.6rem;
+  height: auto;
+  display: inline-block;
+}
+
 .logo span { color: var(--rose-400); }
 .logo:hover { color: var(--gray-900); }
 
