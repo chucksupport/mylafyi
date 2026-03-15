@@ -5,11 +5,12 @@
 
   <h1>Manage Milestones</h1>
 
-  <% const categoryLabels = { breathing: 'Breathing', feeding: 'Feeding', growth: 'Growth', thermoregulation: 'Thermoregulation', firsts: 'Firsts' }; %>
+  <% const categoryLabels = { breathing: 'Breathing', feeding: 'Feeding', growth: 'Growth', thermoregulation: 'Thermoregulation', firsts: 'Firsts' };
+     function formatCategory(cat) { return categoryLabels[cat] || cat.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); } %>
 
   <% Object.keys(milestones).forEach(cat => { %>
   <div class="milestone-admin-section">
-    <h2><%= categoryLabels[cat] || cat %></h2>
+    <h2><%= formatCategory(cat) %></h2>
     <div class="admin-list">
       <% milestones[cat].forEach(m => { %>
       <div class="admin-item milestone-admin-item <%= m.achieved ? 'milestone-achieved' : '' %>">
@@ -47,13 +48,18 @@
       <div class="form-row">
         <div class="form-group">
           <label for="category">Category</label>
-          <select id="category" name="category" required>
+          <select id="category" name="category" required onchange="document.getElementById('custom-category-group').style.display = this.value === '__custom__' ? 'block' : 'none'; document.getElementById('custom_category').required = this.value === '__custom__';">
             <option value="breathing">Breathing</option>
             <option value="feeding">Feeding</option>
             <option value="growth">Growth</option>
             <option value="thermoregulation">Thermoregulation</option>
             <option value="firsts">Firsts</option>
+            <option value="__custom__">Custom...</option>
           </select>
+        </div>
+        <div class="form-group" id="custom-category-group" style="display:none">
+          <label for="custom_category">Custom Category Name</label>
+          <input type="text" id="custom_category" name="custom_category" placeholder="e.g. Sensory, Social, Motor Skills">
         </div>
         <div class="form-group">
           <label for="title">Title</label>

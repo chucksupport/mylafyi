@@ -7,6 +7,7 @@
 
 <%
   const categoryLabels = { breathing: 'Breathing', feeding: 'Feeding', growth: 'Growth', thermoregulation: 'Thermoregulation', firsts: 'Firsts' };
+  function formatCategory(cat) { return categoryLabels[cat] || cat.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
   const catStats = {};
   Object.keys(milestones).forEach(cat => {
     const items = milestones[cat];
@@ -14,6 +15,7 @@
     catStats[cat] = { total: items.length, achieved, complete: achieved === items.length && items.length > 0, pct: items.length ? Math.round((achieved / items.length) * 100) : 0 };
   });
 
+  const knownCats = ['firsts', 'breathing', 'feeding', 'thermoregulation', 'growth'];
   const systemCards = [
     { cat: 'firsts',            icon: '🧠', label: 'Neurological',      sub: 'Firsts & Senses' },
     { cat: 'breathing',         icon: '🫁', label: 'Respiratory',        sub: 'Lungs & Airways' },
@@ -21,6 +23,9 @@
     { cat: 'thermoregulation',  icon: '🌡️', label: 'Thermoregulation',  sub: 'Body Temperature' },
     { cat: 'growth',            icon: '🦴', label: 'Skeletal Growth',    sub: 'Weight & Development' },
   ];
+  Object.keys(milestones).filter(c => !knownCats.includes(c)).forEach(c => {
+    systemCards.push({ cat: c, icon: '⭐', label: formatCategory(c), sub: 'Custom' });
+  });
 %>
 
 <section class="systems-dashboard">
@@ -67,7 +72,7 @@
 <div class="milestones-page">
   <% Object.keys(milestones).forEach(cat => { %>
   <section class="milestone-category" id="cat-<%= cat %>">
-    <h2 class="category-title"><%= categoryLabels[cat] || cat %></h2>
+    <h2 class="category-title"><%= formatCategory(cat) %></h2>
     <div class="milestone-list">
       <% milestones[cat].forEach(m => { %>
       <div class="milestone-item <%= m.achieved ? 'achieved' : '' %>">
