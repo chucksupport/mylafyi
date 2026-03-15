@@ -8,6 +8,7 @@
     "dev": "node --watch server.js"
   },
   "dependencies": {
+    "archiver": "^7.0.1",
     "better-sqlite3": "^11.7.0",
     "connect-sqlite3": "^0.9.15",
     "ejs": "^3.1.10",

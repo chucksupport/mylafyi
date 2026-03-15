@@ -186,6 +186,23 @@ app.get('/admin/logout', (req, res) => {
   res.redirect('/');
 });
 
+// Download database backup
+app.get('/admin/backup/db', requireAuth, (_req, res) => {
+  const dbPath = path.join(dataDir, 'myla.db');
+  res.download(dbPath, 'myla.db');
+});
+
+// Download uploads as zip
+app.get('/admin/backup/uploads', requireAuth, (_req, res) => {
+  const archiver = require('archiver');
+  const uploadsDir = process.env.UPLOADS_DIR || path.join(dataDir, 'uploads');
+  res.attachment('uploads.zip');
+  const archive = archiver('zip');
+  archive.pipe(res);
+  archive.directory(uploadsDir, false);
+  archive.finalize();
+});
+
 app.get('/admin', requireAuth, (_req, res) => {
   const updates = db.getUpdates();
   const latestVitals = db.getLatestVitals();
