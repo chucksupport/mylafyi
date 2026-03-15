@@ -299,8 +299,12 @@ app.post('/admin/milestones/unachieve/:id', requireAuth, (req, res) => {
 });
 
 app.post('/admin/milestones/new', requireAuth, (req, res) => {
+  const category = req.body.category === '__custom__'
+    ? (req.body.custom_category || '').trim().toLowerCase().replace(/\s+/g, '_')
+    : req.body.category;
+  if (!category) return res.redirect('/admin/milestones');
   db.createMilestone({
-    category: req.body.category,
+    category,
     title: req.body.title,
     description: req.body.description,
     sort_order: req.body.sort_order,
