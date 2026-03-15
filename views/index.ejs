@@ -110,6 +110,15 @@
       </div>
     </div>
     <% } %>
+    <% if (latestVitals.feeding_type || latestVitals.feeding_volume_ml || latestVitals.feeding_frequency_minutes) { %>
+    <div class="vital-card">
+      <div class="vital-icon-emoji">&#x1F37C;</div>
+      <div class="vital-info">
+        <span class="vital-value text"><%= latestVitals.feeding_volume_ml ? latestVitals.feeding_volume_ml + 'ml' : '' %><%= latestVitals.feeding_volume_ml && latestVitals.feeding_frequency_minutes ? ' / ' : '' %><%= latestVitals.feeding_frequency_minutes ? (latestVitals.feeding_frequency_minutes >= 60 ? (latestVitals.feeding_frequency_minutes / 60) + 'h' : latestVitals.feeding_frequency_minutes + 'min') : '' %></span>
+        <span class="vital-label"><%= latestVitals.feeding_type || 'Feeding' %></span>
+      </div>
+    </div>
+    <% } %>
   </div>
 
   <% if (vitals.length >= 3) { %>

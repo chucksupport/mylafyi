@@ -256,7 +256,8 @@ app.post('/admin/unpin/:id', requireAuth, (req, res) => {
 // Vitals
 app.get('/admin/vitals', requireAuth, (_req, res) => {
   const vitals = db.getVitals(30);
-  res.render('admin/vitals', { vitals });
+  const latest = db.getLatestVitals();
+  res.render('admin/vitals', { vitals, latest });
 });
 
 app.post('/admin/vitals', requireAuth, (req, res) => {
@@ -268,10 +269,12 @@ app.post('/admin/vitals', requireAuth, (req, res) => {
     heart_rate: req.body.heart_rate,
     oxygen_saturation: req.body.oxygen_saturation,
     temperature: req.body.temperature,
+    fio2: req.body.fio2,
     respiratory_support: req.body.respiratory_support,
     crib_type: req.body.crib_type,
     feeding_type: req.body.feeding_type,
     feeding_volume_ml: req.body.feeding_volume_ml,
+    feeding_frequency_minutes: req.body.feeding_frequency_minutes,
     notes: req.body.notes,
   });
   res.redirect('/admin/vitals');
