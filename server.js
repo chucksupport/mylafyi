@@ -188,6 +188,8 @@ app.get('/admin/logout', (req, res) => {
 
 // Download database backup
 app.get('/admin/backup/db', requireAuth, (_req, res) => {
+  // Flush WAL to main DB file so the download contains all data
+  db.checkpoint();
   const dbPath = path.join(dataDir, 'myla.db');
   res.download(dbPath, 'myla.db');
 });

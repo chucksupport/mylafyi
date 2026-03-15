@@ -149,6 +149,9 @@ if (settingsCount === 0) {
 }
 
 module.exports = {
+  checkpoint() {
+    db.pragma('wal_checkpoint(TRUNCATE)');
+  },
   // Updates
   getUpdates(limit) {
     if (limit) return db.prepare('SELECT * FROM updates ORDER BY update_date DESC LIMIT ?').all(limit);
