@@ -4,7 +4,8 @@
   <div class="hero-inner">
     <p class="hero-label">Born at <%= settings.gestational_age_weeks %> weeks and <%= settings.gestational_age_days %> days</p>
     <h1>Myla Liane Grigsby</h1>
-    <p class="subtitle">Born early, growing strong.</p>
+    <% const bd = new Date(settings.birth_date + 'T' + (settings.birth_time || '00:00') + ':00'); %>
+    <p class="subtitle">Born <%= bd.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) %> at <%= bd.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) %></p>
 
     <div class="stat-cards">
       <div class="stat-card">

@@ -74,14 +74,14 @@ app.use((req, res, next) => {
 
 // Helper: compute age info from settings
 function getAgeInfo(settings) {
-  const birthTime = settings.birth_time || '00:00';
-  const birthDate = new Date(settings.birth_date + 'T' + birthTime + ':00');
+  const birthDate = new Date(settings.birth_date + 'T00:00:00');
   const dueDate = new Date(settings.due_date + 'T00:00:00');
   const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-  const actualDays = Math.floor((now - birthDate) / (1000 * 60 * 60 * 24));
-  const correctedDays = Math.floor((now - dueDate) / (1000 * 60 * 60 * 24));
-  const daysToDueDate = Math.max(0, Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24)));
+  const actualDays = Math.floor((today - birthDate) / (1000 * 60 * 60 * 24));
+  const correctedDays = Math.floor((today - dueDate) / (1000 * 60 * 60 * 24));
+  const daysToDueDate = Math.max(0, Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24)));
 
   const gestWeeks = parseInt(settings.gestational_age_weeks) || 24;
   const gestDays = parseInt(settings.gestational_age_days) || 0;
