@@ -6,7 +6,7 @@
 </section>
 
 <%
-  const categoryLabels = { breathing: 'Breathing', feeding: 'Feeding', growth: 'Growth', thermoregulation: 'Thermoregulation', firsts: 'Firsts' };
+  const categoryLabels = { breathing: 'Respiratory', feeding: 'Gastrointestinal', growth: 'Skeletal Growth', thermoregulation: 'Thermoregulation', firsts: 'Neurological', iv_and_lines: 'IV & Lines' };
   function formatCategory(cat) { return categoryLabels[cat] || cat.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
   const catStats = {};
   Object.keys(milestones).forEach(cat => {
@@ -15,17 +15,14 @@
     catStats[cat] = { total: items.length, achieved, complete: achieved === items.length && items.length > 0, pct: items.length ? Math.round((achieved / items.length) * 100) : 0 };
   });
 
-  const knownCats = ['firsts', 'breathing', 'feeding', 'thermoregulation', 'growth'];
   const systemCards = [
     { cat: 'firsts',            icon: '🧠', label: 'Neurological',      sub: 'Firsts & Senses' },
     { cat: 'breathing',         icon: '🫁', label: 'Respiratory',        sub: 'Lungs & Airways' },
     { cat: 'feeding',           icon: '🍼', label: 'Gastrointestinal',   sub: 'Feeding & Digestion' },
     { cat: 'thermoregulation',  icon: '🌡️', label: 'Thermoregulation',  sub: 'Body Temperature' },
     { cat: 'growth',            icon: '🦴', label: 'Skeletal Growth',    sub: 'Weight & Development' },
+    { cat: 'iv_and_lines',      icon: '💉', label: 'IV & Lines',         sub: 'Vascular Access' },
   ];
-  Object.keys(milestones).filter(c => !knownCats.includes(c)).forEach(c => {
-    systemCards.push({ cat: c, icon: '⭐', label: formatCategory(c), sub: 'Custom' });
-  });
 %>
 
 <section class="systems-dashboard">
