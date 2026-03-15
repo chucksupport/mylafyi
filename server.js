@@ -257,11 +257,40 @@ app.post('/admin/unpin/:id', requireAuth, (req, res) => {
 app.get('/admin/vitals', requireAuth, (_req, res) => {
   const vitals = db.getVitals(30);
   const latest = db.getLatestVitals();
-  res.render('admin/vitals', { vitals, latest });
+  res.render('admin/vitals', { vitals, latest, editing: null });
 });
 
 app.post('/admin/vitals', requireAuth, (req, res) => {
   db.createVital({
+    recorded_at: req.body.recorded_at || new Date().toISOString(),
+    weight_grams: req.body.weight_grams,
+    length_cm: req.body.length_cm,
+    head_circumference_cm: req.body.head_circumference_cm,
+    heart_rate: req.body.heart_rate,
+    respiratory_rate: req.body.respiratory_rate,
+    oxygen_saturation: req.body.oxygen_saturation,
+    temperature: req.body.temperature,
+    blood_pressure: req.body.blood_pressure,
+    fio2: req.body.fio2,
+    respiratory_support: req.body.respiratory_support,
+    crib_type: req.body.crib_type,
+    feeding_type: req.body.feeding_type,
+    feeding_volume_ml: req.body.feeding_volume_ml,
+    feeding_frequency_minutes: req.body.feeding_frequency_minutes,
+    notes: req.body.notes,
+  });
+  res.redirect('/admin/vitals');
+});
+
+app.get('/admin/vitals/edit/:id', requireAuth, (req, res) => {
+  const vital = db.getVital(req.params.id);
+  if (!vital) return res.status(404).render('404');
+  const vitals = db.getVitals(30);
+  res.render('admin/vitals', { vitals, latest: vital, editing: vital });
+});
+
+app.post('/admin/vitals/edit/:id', requireAuth, (req, res) => {
+  db.editVital(req.params.id, {
     recorded_at: req.body.recorded_at || new Date().toISOString(),
     weight_grams: req.body.weight_grams,
     length_cm: req.body.length_cm,
